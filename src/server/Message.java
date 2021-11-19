@@ -26,7 +26,7 @@ public class Message {
         return "";
     }
 
-    public byte[] generateTag() throws NoSuchAlgorithmException, InvalidKeyException {
+    public byte[] generateTag() throws NoSuchAlgorithmException {
         //random byteArray 256 bit
         byte[] bytes = new byte[32];
         SecureRandom.getInstanceStrong().nextBytes(bytes);
