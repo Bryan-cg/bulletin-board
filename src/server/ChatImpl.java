@@ -9,9 +9,6 @@ import java.util.Set;
 
 public class ChatImpl extends UnicastRemoteObject implements Chat {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = 2144719768445459230L;
 
     private final SharedData data;

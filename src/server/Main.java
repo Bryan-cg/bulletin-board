@@ -5,6 +5,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class Main {
+    private static int PORT = 1099;
+
     public static void main(String[] args) {
         Main main = new Main();
         main.startServer();
@@ -12,13 +14,12 @@ public class Main {
 
     private void startServer() {
         try {
-            // create on port 1099
-            Registry registry = LocateRegistry.createRegistry(1099);
-            // create a new service named CounterService
+            Registry registry = LocateRegistry.createRegistry(PORT);
             registry.rebind("ChatService", new ChatImpl());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("System is ready");
+        System.out.printf("Server bulletin board running on port %d%n", PORT);
     }
 }
