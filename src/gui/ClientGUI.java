@@ -28,6 +28,8 @@ public class ClientGUI {
     //Encryption
     private final String CIPHER_INSTANCE = "AES/ECB/PKCS5Padding";
     private SecretKey secretKey;
+    private byte[] tag;
+    private byte[] idx;
 
     public ClientGUI() {
 
@@ -40,20 +42,14 @@ public class ClientGUI {
         frame.pack();
 
         // Send on enter then clear to prepare for next message
-        textField.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    if (textField.getText().startsWith("/w")) {
-                        String receiver = textField.getText().split(" ")[1];
-                        impl.sendMessagePrivate(name, textField.getText().substring(4 + receiver.length()), receiver);
-                    } else {
-                        impl.sendMessage(name, textField.getText());
-                    }
-                } catch (RemoteException e1) {
-                    e1.printStackTrace();
-                }
-                textField.setText("");
+        textField.addActionListener(e -> {
+            try {
+                String receiver = textField.getText().split(" ")[0];
+                impl.sendMessagePrivate(name, textField.getText().substring(receiver.length()), receiver);
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
             }
+            textField.setText("");
         });
 
         frame.addWindowListener(new WindowAdapter() {
@@ -72,6 +68,21 @@ public class ClientGUI {
                 }
             }
         });
+    }
+
+    private void initializeEncryption() throws NoSuchAlgorithmException {
+        //key
+        this.secretKey = generateKeyAES(256);
+
+        //tag
+        byte[] tagBytes = new byte[32];
+        SecureRandom.getInstanceStrong().nextBytes(tagBytes);
+        this.tag = tagBytes;
+
+        //idx
+        final Random r = new Random();
+        int randomIndex = r.nextInt(20);
+        this.idx = BigInteger.valueOf(randomIndex).toByteArray();
     }
 
     public static void main(String[] args) throws Exception {
