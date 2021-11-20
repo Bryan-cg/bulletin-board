@@ -71,7 +71,7 @@ public class ClientGUI {
     }
 
     private void initializeEncryption() throws NoSuchAlgorithmException {
-        //key
+        //Symmetric key
         this.secretKey = generateKeyAES(256);
 
         //tag
