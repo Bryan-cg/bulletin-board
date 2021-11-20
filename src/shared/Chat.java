@@ -6,7 +6,7 @@ import java.util.Set;
 
 public interface Chat extends Remote {
 
-	void write(int idx, byte[] v, byte[] hashedTag);
+	void write(byte[] idx, byte[] v, byte[] hashedTag);
 
-	byte[] get(int idx, byte[] tag);
+	byte[] get(byte[] idx, byte[] tag);
 }

@@ -2,6 +2,7 @@ package server;
 
 import shared.Chat;
 
+import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
@@ -24,19 +25,21 @@ public class BulletinBoard extends UnicastRemoteObject implements Chat {
     }
 
     @Override
-    public void write(int idx, byte[] v, byte[] hashedTag) {
-        cells.get(idx).put(hashedTag, v);
+    public void write(byte[] idx, byte[] v, byte[] hashedTag) {
+        int i = new BigInteger(idx).intValue();
+        cells.get(i).put(hashedTag, v);
     }
 
     @Override
-    public byte[] get(int i, byte[] tag) {
+    public byte[] get(byte[] idx, byte[] tag) {
+        int i = new BigInteger(idx).intValue();
         byte[] hashedTag = hashing(tag);
         return cells.get(i).get(hashedTag);
     }
 
+    //TODO hashing tag
     private byte[] hashing(byte[] tag) {
-        //TODO hashing tag
-        return null;
+        throw new RuntimeException("Not yet implemented");
     }
 
 }
