@@ -1,14 +1,18 @@
 package server;
 
+import shared.Chat;
+
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class BulletinBoard {
-    private final int BB_SIZE;
+public class BulletinBoard extends UnicastRemoteObject implements Chat {
+    private final int BB_SIZE = 20;
     private ArrayList<HashMap<byte[], byte[]>> cells; //hashmap = row in bulletin-board, element in row: <v, t> (t = hashing from tag)
 
-    public BulletinBoard(int size) {
-        this.BB_SIZE = size;
+    public BulletinBoard() throws RemoteException {
+        super();
         initializeBB();
     }
 
@@ -19,12 +23,20 @@ public class BulletinBoard {
         }
     }
 
-    public void add(int i, byte[] v, byte[] t) {
-        cells.get(i).put(t, v);
+    @Override
+    public void write(int idx, byte[] v, byte[] hashedTag) {
+        cells.get(idx).put(hashedTag, v);
     }
 
-    public byte[] get(int i, byte[] b) {
-        return cells.get(i).get(b);
+    @Override
+    public byte[] get(int i, byte[] tag) {
+        byte[] hashedTag = hashing(tag);
+        return cells.get(i).get(hashedTag);
+    }
+
+    private byte[] hashing(byte[] tag) {
+        //TODO hashing tag
+        return null;
     }
 
 }

@@ -4,10 +4,6 @@ import shared.Chat;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -18,71 +14,51 @@ import java.util.Set;
 
 public class ClientGUI {
 
-    Chat impl;
+    Chat bulletinBoard;
     String name;
     JFrame frame = new JFrame("Chatter");
     JTextField textField = new JTextField(50);
     JTextArea messageArea = new JTextArea(16, 50);
-    JTextArea onlineClients = new JTextArea(40, 16);
 
     //Encryption
     private final String CIPHER_INSTANCE = "AES/ECB/PKCS5Padding";
-    private SecretKey secretKey;
-    private byte[] tag;
-    private byte[] idx;
+
+    private byte[] myTag;
+    private byte[] myIdx;
+    private SecretKey mySecretKey;
+
+    private byte[] receiverTag;
+    private byte[] receiverIdx;
+    private SecretKey receiverSecretKey;
 
     public ClientGUI() {
 
         textField.setEditable(false);
-        onlineClients.setEditable(false);
         messageArea.setEditable(false);
         frame.getContentPane().add(textField, BorderLayout.SOUTH);
         frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
-        frame.getContentPane().add(new JScrollPane(onlineClients), BorderLayout.WEST);
         frame.pack();
 
-        // Send on enter then clear to prepare for next message
+        //On enter
         textField.addActionListener(e -> {
-            try {
-                String receiver = textField.getText().split(" ")[0];
-                impl.sendMessagePrivate(name, textField.getText().substring(receiver.length()), receiver);
-            } catch (RemoteException e1) {
-                e1.printStackTrace();
-            }
+            send(textField.getText());
             textField.setText("");
-        });
-
-        frame.addWindowListener(new WindowAdapter() {
-
-            @Override
-            public void windowClosing(WindowEvent e) {
-                boolean cont = false;
-                while (!cont) {
-                    try {
-                        if (impl.unRegister(name)) {
-                            cont = true;
-                        }
-                    } catch (RemoteException e1) {
-                        e1.printStackTrace();
-                    }
-                }
-            }
         });
     }
 
     private void initializeEncryption() throws NoSuchAlgorithmException {
         //Symmetric key
-        this.secretKey = generateKeyAES(256);
+        this.mySecretKey = generateKeyAES(256);
 
         //tag
         byte[] tagBytes = new byte[32];
         SecureRandom.getInstanceStrong().nextBytes(tagBytes);
-        this.tag = tagBytes;
+        this.myTag = tagBytes;
 
         //idx
         final Random r = new Random();
         int randomIndex = r.nextInt(20);
-        this.idx = BigInteger.valueOf(randomIndex).toByteArray();
+        this.myIdx = BigInteger.valueOf(randomIndex).toByteArray();
     }
 
     public static void main(String[] args) throws Exception {
@@ -101,33 +77,21 @@ public class ClientGUI {
         try {
 
             Registry myRegistry = LocateRegistry.getRegistry("127.0.0.1", 1099);
-            impl = (Chat) myRegistry.lookup("ChatService");
+            bulletinBoard = (Chat) myRegistry.lookup("BulletinBoard");
 
             boolean hasName = false;
             while (!hasName) {
                 name = getName();
-                if (name == null) {
-                    return;
-                }
-                hasName = impl.register(name);
+                if (name == null) return;
+                hasName = true;
                 frame.setTitle(name);
             }
 
             textField.setEditable(true);
-            Set<String> names = impl.getUsers();
-            onlineClients.setText("");
-            for (String name : names) {
-                onlineClients.append(name + "\n");
-            }
 
             while (true) {
-                String message = impl.getMessage(name);
-                messageArea.append(message + "\n");
-                names = impl.getUsers();
-                onlineClients.setText("");
-                for (String name : names) {
-                    onlineClients.append(name + "\n");
-                }
+                //TODO get message by tag and idx
+                receive();
             }
 
         } finally {

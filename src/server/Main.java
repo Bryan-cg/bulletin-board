@@ -15,7 +15,7 @@ public class Main {
     private void startServer() {
         try {
             Registry registry = LocateRegistry.createRegistry(PORT);
-            registry.rebind("ChatService", new ChatImpl());
+            registry.rebind("BulletinBoard", new BulletinBoard());
 
         } catch (Exception e) {
             e.printStackTrace();
