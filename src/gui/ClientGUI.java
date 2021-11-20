@@ -25,6 +25,10 @@ public class ClientGUI {
     JTextArea messageArea = new JTextArea(16, 50);
     JTextArea onlineClients = new JTextArea(40, 16);
 
+    //Encryption
+    private final String CIPHER_INSTANCE = "AES/ECB/PKCS5Padding";
+    private SecretKey secretKey;
+
     public ClientGUI() {
 
         textField.setEditable(false);
@@ -71,7 +75,6 @@ public class ClientGUI {
     }
 
     public static void main(String[] args) throws Exception {
-
         ClientGUI client = new ClientGUI();
         client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         client.frame.setVisible(true);
@@ -92,7 +95,7 @@ public class ClientGUI {
             boolean hasName = false;
             while (!hasName) {
                 name = getName();
-                if (name==null){
+                if (name == null) {
                     return;
                 }
                 hasName = impl.register(name);

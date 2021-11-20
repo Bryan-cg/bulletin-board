@@ -1,57 +1,82 @@
 package server;
 
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Random;
 
 public class Message {
-    private String cypherText;
-    private int idx;
+    private byte[] textBytes;
+    private byte[] idx;
     private byte[] tag;
+    private byte[] encryptedMessage;
     private final int SIZE_BB = 20;
+    private final String CIPHER_INSTANCE;
 
 
-    public Message(String text, SecretKey secretKey) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
-        this.cypherText = generateCypherText(text, secretKey);
-        this.idx = generateRandomIndex();
-        this.tag = generateTag();
+    public Message(String text, SecretKey secretKey, String CIPHER_INSTANCE) {
+        this.CIPHER_INSTANCE = CIPHER_INSTANCE;
+        try {
+            this.textBytes = generateTextBytes(text);
+            this.idx = generateRandomIndex();
+            this.tag = generateTag();
+            this.encryptedMessage = generateHashedResult(secretKey);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private String generateCypherText(String text, SecretKey secretKey) {
-        //generate cyphertext with secret key
-        return "";
+    private byte[] generateTextBytes(String text) {
+        return textBytes = text.getBytes();
     }
 
-    public byte[] generateTag() throws NoSuchAlgorithmException {
+    private byte[] generateTag() throws NoSuchAlgorithmException {
         //random byteArray 256 bit
         byte[] bytes = new byte[32];
         SecureRandom.getInstanceStrong().nextBytes(bytes);
         return bytes;
     }
 
-    private SecretKey generateSecretKey() throws NoSuchAlgorithmException {
-        KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA1");
-        return keyGen.generateKey();
+    private byte[] generateRandomIndex() {
+        final Random r = new Random();
+        int randomIndex = r.nextInt(SIZE_BB);
+        return BigInteger.valueOf(randomIndex).toByteArray();
     }
 
-    private int generateRandomIndex() {
-        Random r = new Random();
-        return r.nextInt(SIZE_BB);
+    private byte[] generateHashedResult(SecretKey secretKey) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        final byte[] totalByteArr = combineByteArrays(this.textBytes, this.idx, this.tag);
+        final Cipher cipher;
+        cipher = Cipher.getInstance(CIPHER_INSTANCE);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        return cipher.doFinal(totalByteArr);
     }
 
-    public String getCypherText() {
-        return cypherText;
+    private byte[] combineByteArrays(byte[] a, byte[] b, byte[] c) throws IOException {
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        outputStream.write(a);
+        outputStream.write(b);
+        outputStream.write(c);
+        return outputStream.toByteArray();
     }
 
-    public int getIdx() {
+    public byte[] getTextBytes() {
+        return textBytes;
+    }
+
+    public byte[] getIdx() {
         return idx;
     }
 
     public byte[] getTag() {
         return tag;
+    }
+
+    public byte[] getEncryptedMessage() {
+        return encryptedMessage;
     }
 }
