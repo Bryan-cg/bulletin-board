@@ -23,6 +23,7 @@ public class ClientGUI {
     //Encryption
     private final String CIPHER_INSTANCE = "AES/ECB/PKCS5Padding";
 
+    //implementation with 1 receiver client
     private byte[] myTag;
     private byte[] myIdx;
     private SecretKey mySecretKey;
@@ -92,6 +93,8 @@ public class ClientGUI {
             while (true) {
                 //TODO get message by tag and idx
                 receive();
+
+                //TODO maybe only poll for messages when button is pressed?
             }
 
         } finally {
