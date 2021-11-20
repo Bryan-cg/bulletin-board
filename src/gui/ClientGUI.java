@@ -1,16 +1,25 @@
 package gui;
 
 import shared.Chat;
+import models.Message;
 
+import javax.crypto.*;
+import javax.crypto.SecretKey;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.ArrayList;
-import java.util.Set;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Random;
+
+//TODO's (other)
+// "Add new receiver" button, with dialog popup to enter receiver properties.
+// Show tag, idx & secretkey in gui, so you can copy paste it in other client.
 
 public class ClientGUI {
 
@@ -33,6 +42,12 @@ public class ClientGUI {
     private SecretKey receiverSecretKey;
 
     public ClientGUI() {
+
+        try {
+            initializeEncryption();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
 
         textField.setEditable(false);
         messageArea.setEditable(false);
@@ -74,6 +89,17 @@ public class ClientGUI {
                 JOptionPane.PLAIN_MESSAGE);
     }
 
+    public static SecretKey generateKeyAES(int n) {
+        KeyGenerator keyGenerator = null;
+        try {
+            keyGenerator = KeyGenerator.getInstance("AES");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        keyGenerator.init(n);
+        return keyGenerator.generateKey();
+    }
+
     private void run() throws IOException, NotBoundException {
         try {
 
@@ -101,5 +127,24 @@ public class ClientGUI {
             frame.setVisible(false);
             frame.dispose();
         }
+    }
+
+    public void send(String messageContent) {
+
+        //tag and idx for next message created inside message, client doesn't need to generate new ones
+        Message message = new Message(messageContent, mySecretKey, CIPHER_INSTANCE);
+
+        bulletinBoard.write(myIdx, message.getEncryptedMessage(), myTag);
+        this.myTag = message.getTag();
+        this.myIdx = message.getIdx();
+
+        //TODO: generate new mySecretkey --> key derivation function
+
+    }
+
+    //TODO: after receive generate new receiverSecretKey --> key derivation function
+    // update receiverIdx and receiverTag from message content
+    public String receive() {
+        throw new RuntimeException("Not yet implemented");
     }
 }
