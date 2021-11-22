@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -172,7 +173,26 @@ public class ClientGUI {
     }
 
     //Hoe hieruit nieuwe tag en id en effectieve message achterhalen?
+    //Zal fullMessage er zo uitzien 11tekst5?
     private String spitTotalMessage(String fullMessage) {
+        int indexID = -1;
+        int indexTag = -1;
+
+        for(int i=0; i<fullMessage.length();i++) {
+            if(!Character.isDigit(fullMessage.charAt(i))) {
+                indexID = i-1;
+                break;
+            }
+        }
+        for(int i=fullMessage.length()-1; i>-1;i--) {
+            if(!Character.isDigit(fullMessage.charAt(i))) {
+                indexTag = i+1;
+                break;
+            }
+        }
+
+        this.receiverIdx = fullMessage.substring(0,indexID).getBytes(StandardCharsets.UTF_8);
+        this.receiverTag = fullMessage.substring(indexTag).getBytes(StandardCharsets.UTF_8);
         return "message";
     }
 
