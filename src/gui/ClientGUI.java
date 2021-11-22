@@ -2,9 +2,9 @@ package gui;
 
 import shared.Chat;
 import models.Message;
-
 import javax.crypto.*;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
@@ -125,7 +125,7 @@ public class ClientGUI {
 
             while (true) {
                 //TODO get message by tag and idx
-                //receive();
+                //receive()
 
                 //TODO maybe only poll for messages when button is pressed?
             }
@@ -197,8 +197,16 @@ public class ClientGUI {
     }
 
     //TODO: after receive generate new receiverSecretKey --> key derivation function
-    private void keyDeriviationFunction(SecretKey key) {
+    //https://sorenpoulsen.com/calculate-hmac-sha256-with-java
+    //https://stackoverflow.com/questions/14204437/convert-byte-array-to-secret-key
+    private void keyDeriviationFunction(SecretKey key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        byte[] hmacSha256;
 
-        throw new RuntimeException("Not yet implemented");
+        Mac mac = Mac.getInstance("HmacSHA256");
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key.getEncoded(), "HmacSHA256");
+        mac.init(secretKeySpec);
+        hmacSha256 = mac.doFinal(key.getEncoded());
+        SecretKey newKey = new SecretKeySpec(hmacSha256, 0, hmacSha256.length, "AES");
+        System.out.println(newKey);
     }
 }
