@@ -13,8 +13,10 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Random;
 
 //TODO's (other)
@@ -57,7 +59,11 @@ public class ClientGUI {
 
         //On enter
         textField.addActionListener(e -> {
-            send(textField.getText());
+            try {
+                send(textField.getText());
+            } catch (RemoteException ex) {
+                ex.printStackTrace();
+            }
             textField.setText("");
         });
     }
@@ -100,7 +106,7 @@ public class ClientGUI {
         return keyGenerator.generateKey();
     }
 
-    private void run() throws IOException, NotBoundException {
+    private void run() throws IOException, NotBoundException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
         try {
 
             Registry myRegistry = LocateRegistry.getRegistry("127.0.0.1", 1099);
@@ -118,7 +124,7 @@ public class ClientGUI {
 
             while (true) {
                 //TODO get message by tag and idx
-                receive();
+                //receive();
 
                 //TODO maybe only poll for messages when button is pressed?
             }
@@ -129,7 +135,7 @@ public class ClientGUI {
         }
     }
 
-    public void send(String messageContent) {
+    public void send(String messageContent) throws RemoteException {
 
         //tag and idx for next message created inside message, client doesn't need to generate new ones
         Message message = new Message(messageContent, mySecretKey, CIPHER_INSTANCE);
@@ -142,9 +148,37 @@ public class ClientGUI {
 
     }
 
+
+
+    public String receive() throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+        byte [] totalMessage = bulletinBoard.get(receiverIdx, receiverTag);
+        String message;
+
+        if(totalMessage!= null){
+            message = decryptTotalMessage(totalMessage);
+            keyDeriviationFunction(receiverSecretKey);
+            return message;
+        }
+        return null;
+    }
+    //TODO update receiverIdx and receiverTag from message content and return the actual message
+    private String decryptTotalMessage(byte[] totalMessage) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        final Cipher cipher;
+        cipher = Cipher.getInstance(CIPHER_INSTANCE);
+        cipher.init(Cipher.DECRYPT_MODE, receiverSecretKey);
+        String fullMessage = Arrays.toString(cipher.doFinal(totalMessage));
+
+        return spitTotalMessage(fullMessage);
+    }
+
+    //Hoe hieruit nieuwe tag en id en effectieve message achterhalen?
+    private String spitTotalMessage(String fullMessage) {
+        return "message";
+    }
+
     //TODO: after receive generate new receiverSecretKey --> key derivation function
-    // update receiverIdx and receiverTag from message content
-    public String receive() {
+    private void keyDeriviationFunction(SecretKey key) {
+
         throw new RuntimeException("Not yet implemented");
     }
 }
