@@ -68,11 +68,17 @@ public class ClientGUI {
         // Panels for ID, Tag and Key
         JPanel panel = new JPanel(new GridLayout(3, 2, 0, 0));
         panel.add(new Label("ID: "));
-        panel.add(new JTextField(Arrays.toString(myIdx)));
+        JTextField textFieldId = new JTextField(Arrays.toString(myIdx));
+        textFieldId.setEditable(false);
+        panel.add(textFieldId);
         panel.add(new Label("Tag: "));
-        panel.add(new JTextField(Arrays.toString(myTag)));
+        JTextField textFieldTag = new JTextField(Arrays.toString(myTag));
+        textFieldTag.setEditable(false);
+        panel.add(textFieldTag);
         panel.add(new Label("Key: "));
-        panel.add(new JTextField(Arrays.toString(mySecretKey.getEncoded())));
+        JTextField textFieldKey = new JTextField(Arrays.toString(mySecretKey.getEncoded()));
+        textFieldKey.setEditable(false);
+        panel.add(textFieldKey);
 
         frame.getContentPane().add(panel, BorderLayout.PAGE_START);
         frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
@@ -102,11 +108,32 @@ public class ClientGUI {
         newReceiverButton.addActionListener(e -> {
             int result = JOptionPane.showConfirmDialog(null, myPanel,
                     "Please enter the ID, Tag and Key", JOptionPane.OK_CANCEL_OPTION);
-            //TODO: voorlopig enkel uitprinten, later in een lijst steken ofso?
+
             if (result == JOptionPane.OK_OPTION) {
-                System.out.println("ID: " + idField.getText());
-                System.out.println("Tag: " + tagField.getText());
-                System.out.println("Key: " + keyField.getText());
+                receiverIdx = convertStringToByteArr(idField.getText()) ;
+                receiverTag = convertStringToByteArr(tagField.getText());
+                receiverSecretKey = new SecretKeySpec(convertStringToByteArr(keyField.getText()), 0, convertStringToByteArr(keyField.getText()).length, "AES");
+
+                System.out.println("ID: " + Arrays.toString(receiverIdx));
+                System.out.println("Tag: " + Arrays.toString(receiverTag));
+                System.out.println("Key: " + Arrays.toString(receiverSecretKey.getEncoded()));
+
+                try {
+                    receive();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                } catch (NoSuchAlgorithmException ex) {
+                    ex.printStackTrace();
+                } catch (NoSuchPaddingException ex) {
+                    ex.printStackTrace();
+                } catch (IllegalBlockSizeException ex) {
+                    ex.printStackTrace();
+                } catch (BadPaddingException ex) {
+                    ex.printStackTrace();
+                } catch (InvalidKeyException ex) {
+                    ex.printStackTrace();
+                }
+
             }
         });
     }
@@ -215,7 +242,6 @@ public class ClientGUI {
 
     public String receive() throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
         byte[] totalMessage = bulletinBoard.get(receiverIdx, receiverTag);
-        System.out.println(totalMessage);
         String message;
 
         if (totalMessage != null) {
@@ -231,9 +257,7 @@ public class ClientGUI {
         final Cipher cipher;
         cipher = Cipher.getInstance(CIPHER_INSTANCE);
         cipher.init(Cipher.DECRYPT_MODE, receiverSecretKey);
-        String fullMessage = Arrays.toString(cipher.doFinal(totalMessage));
-
-        return splitTotalMessage(fullMessage);
+        return splitTotalMessage(cipher.doFinal(totalMessage));
     }
 
     private String splitTotalMessage(byte[] fullMessage) throws NoSuchAlgorithmException, InvalidKeyException {

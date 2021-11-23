@@ -48,7 +48,7 @@ public class Message {
     }
 
     private byte[] generateHashedResult(SecretKey secretKey) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        final byte[] totalByteArr = combineByteArrays(this.textBytes, this.idx, this.tag);
+        final byte[] totalByteArr = combineByteArrays(this.idx, this.tag,this.textBytes);
         final Cipher cipher;
         cipher = Cipher.getInstance(CIPHER_INSTANCE);
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
