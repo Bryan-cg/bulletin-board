@@ -87,10 +87,11 @@ public class ClientThread extends Thread {
         return messageResult;
     }
 
+    //TODO: THREADING PROBLEM BELOW
     @Override
     public void run() {
         while (true) {
-            System.out.println(this.receiverSecretKey + Arrays.toString(receiverIdx) + Arrays.toString(receiverTag)); //werkt als dit er staat, anders niet, threading probleem
+            System.out.println(); //werkt als dit er staat, anders niet, threading probleem
             if (receiverIdx != null && receiverTag != null && receiverSecretKey != null) {
                 try {
                     receive();
