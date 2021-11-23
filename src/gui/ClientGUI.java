@@ -127,6 +127,9 @@ public class ClientGUI {
         System.out.println("This ID: " + Arrays.toString(myIdx));
         System.out.println("This Tag: " + Arrays.toString(myTag));
         System.out.println("This Key: " + Arrays.toString(mySecretKey.getEncoded()));
+        System.out.println("Key length: " + mySecretKey.getEncoded().length);
+        System.out.println("ID length: " + myIdx.length);
+        System.out.println("Tag length: " + myTag.length);
     }
 
     public static void main(String[] args) throws Exception {
@@ -214,12 +217,12 @@ public class ClientGUI {
         cipher.init(Cipher.DECRYPT_MODE, receiverSecretKey);
         String fullMessage = Arrays.toString(cipher.doFinal(totalMessage));
 
-        return spitTotalMessage(fullMessage);
+        return splitTotalMessage(fullMessage);
     }
 
     //Hoe hieruit nieuwe tag en id en effectieve message achterhalen?
-    //Zal fullMessage er zo uitzien 11tekst5?
-    private String spitTotalMessage(String fullMessage) {
+    //Zal fullMessage er zo uitzien 11tekst5? neen branko
+    private String splitTotalMessage(String fullMessage) {
         int indexID = -1;
         int indexTag = -1;
 
