@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.Random;
 
 //TODO's (other)
-// "Add new receiver" button, with dialog popup to enter receiver properties.
 // Show tag, idx & secretkey in gui, so you can copy paste it in other client.
 
 public class ClientGUI {
@@ -31,6 +30,12 @@ public class ClientGUI {
     JFrame frame = new JFrame("Chatter");
     JTextField textField = new JTextField(50);
     JTextArea messageArea = new JTextArea(16, 50);
+    JButton newReceiverButton = new JButton("Add new receiver");
+    JPanel innerPanel= new JPanel(new BorderLayout());
+    JTextField idField = new JTextField(5);
+    JTextField tagField = new JTextField(5);
+    JTextField keyField = new JTextField(5);
+
 
     //Encryption
     private final String CIPHER_INSTANCE = "AES/ECB/PKCS5Padding";
@@ -52,13 +57,25 @@ public class ClientGUI {
             e.printStackTrace();
         }
 
+        // Code for starting screen
         textField.setEditable(false);
         messageArea.setEditable(false);
-        frame.getContentPane().add(textField, BorderLayout.SOUTH);
+        innerPanel.add(newReceiverButton, BorderLayout.EAST);
+        innerPanel.add(textField, BorderLayout.WEST);
         frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
+        frame.getContentPane().add(innerPanel,BorderLayout.SOUTH);
         frame.pack();
 
-        //On enter
+        // Code for popup screen: new receiver
+        JPanel myPanel = new JPanel();
+        myPanel.add(new JLabel("ID: "));
+        myPanel.add(idField);
+        myPanel.add(new JLabel("Tag: "));
+        myPanel.add(tagField);
+        myPanel.add(new JLabel("Key: "));
+        myPanel.add(keyField);
+
+        // On enter
         textField.addActionListener(e -> {
             try {
                 send(textField.getText());
@@ -66,6 +83,18 @@ public class ClientGUI {
                 ex.printStackTrace();
             }
             textField.setText("");
+        });
+
+        // Action when button pressed
+        newReceiverButton.addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(null, myPanel,
+                    "Please enter the ID, Tag and Key", JOptionPane.OK_CANCEL_OPTION);
+            //TODO: voorlopig enkel uitprinten, later in een lijst steken ofso?
+            if (result == JOptionPane.OK_OPTION) {
+                System.out.println("ID: " + idField.getText());
+                System.out.println("Tag: " + tagField.getText());
+                System.out.println("Key: " + keyField.getText());
+            }
         });
     }
 
