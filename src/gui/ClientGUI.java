@@ -2,6 +2,7 @@ package gui;
 
 import shared.Chat;
 import models.Message;
+
 import javax.crypto.*;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -17,6 +18,7 @@ import java.rmi.registry.Registry;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -45,9 +47,9 @@ public class ClientGUI {
     private byte[] myIdx;
     private SecretKey mySecretKey;
 
-    private byte[] receiverTag;
-    private byte[] receiverIdx;
-    private SecretKey receiverSecretKey;
+    private byte[] receiverTag = null;
+    private byte[] receiverIdx = null;
+    private SecretKey receiverSecretKey = null;
 
     public ClientGUI() {
 
@@ -72,9 +74,9 @@ public class ClientGUI {
         panel.add(new Label("Key: "));
         panel.add(new JTextField(Arrays.toString(mySecretKey.getEncoded())));
 
-        frame.getContentPane().add(panel,BorderLayout.PAGE_START);
+        frame.getContentPane().add(panel, BorderLayout.PAGE_START);
         frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
-        frame.getContentPane().add(southPanel,BorderLayout.SOUTH);
+        frame.getContentPane().add(southPanel, BorderLayout.SOUTH);
         frame.pack();
 
         // Code for popup screen: new receiver
@@ -109,6 +111,15 @@ public class ClientGUI {
         });
     }
 
+    private byte[] convertStringToByteArr(String stringByteArr) {
+        String[] bytesString = stringByteArr.split(", ");
+        byte[] bytes = new byte[bytesString.length];
+        for(int i = 0 ; i < bytes.length ; ++i) {
+            bytes[i] = Byte.parseByte(bytesString[i]);
+        }
+        return bytes;
+    }
+
     private void initializeEncryption() throws NoSuchAlgorithmException {
         //Symmetric key
         this.mySecretKey = generateKeyAES(256);
@@ -122,6 +133,8 @@ public class ClientGUI {
         final Random r = new Random();
         int randomIndex = r.nextInt(20);
         this.myIdx = BigInteger.valueOf(randomIndex).toByteArray();
+        System.out.println(randomIndex);
+
 
         // Debugging: printing ID, Tag and Key
         System.out.println("This ID: " + Arrays.toString(myIdx));
@@ -173,7 +186,9 @@ public class ClientGUI {
 
             while (true) {
                 //TODO get message by tag and idx
-                //receive()
+                if (receiverTag != null && receiverIdx != null && receiverSecretKey != null) {
+                    receive();
+                }
 
                 //TODO maybe only poll for messages when button is pressed?
             }
@@ -185,31 +200,32 @@ public class ClientGUI {
     }
 
     public void send(String messageContent) throws RemoteException {
-
         //tag and idx for next message created inside message, client doesn't need to generate new ones
         Message message = new Message(messageContent, mySecretKey, CIPHER_INSTANCE);
-
         bulletinBoard.write(myIdx, message.getEncryptedMessage(), myTag);
         this.myTag = message.getTag();
         this.myIdx = message.getIdx();
+        int test = new BigInteger(myIdx).intValue();
 
+        messageArea.append(String.format("%s: %s%n", this.name, messageContent));
         //TODO: generate new mySecretkey --> key derivation function
 
     }
 
 
-
     public String receive() throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-        byte [] totalMessage = bulletinBoard.get(receiverIdx, receiverTag);
+        byte[] totalMessage = bulletinBoard.get(receiverIdx, receiverTag);
+        System.out.println(totalMessage);
         String message;
 
-        if(totalMessage!= null){
+        if (totalMessage != null) {
             message = decryptTotalMessage(totalMessage);
             keyDeriviationFunction(receiverSecretKey);
             return message;
         }
         return null;
     }
+
     //TODO update receiverIdx and receiverTag from message content and return the actual message
     private String decryptTotalMessage(byte[] totalMessage) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         final Cipher cipher;
@@ -220,41 +236,40 @@ public class ClientGUI {
         return splitTotalMessage(fullMessage);
     }
 
-    //Hoe hieruit nieuwe tag en id en effectieve message achterhalen?
-    //Zal fullMessage er zo uitzien 11tekst5? neen branko
-    private String splitTotalMessage(String fullMessage) {
-        int indexID = -1;
-        int indexTag = -1;
+    private String splitTotalMessage(byte[] fullMessage) throws NoSuchAlgorithmException, InvalidKeyException {
+        byte[] decryptedIdx = new byte[1];
+        byte[] decryptedTag = new byte[32];
+        ArrayList<Byte> decryptedMessage = new ArrayList<>(); //Needs to be message size --> variable
 
-        for(int i=0; i<fullMessage.length();i++) {
-            if(!Character.isDigit(fullMessage.charAt(i))) {
-                indexID = i-1;
-                break;
-            }
-        }
-        for(int i=fullMessage.length()-1; i>-1;i--) {
-            if(!Character.isDigit(fullMessage.charAt(i))) {
-                indexTag = i+1;
-                break;
-            }
+        decryptedIdx[0] = fullMessage[0];
+        System.arraycopy(fullMessage, 1, decryptedTag, 1, 32);
+
+        for (int i = 33; i < fullMessage.length; i++) {
+            decryptedMessage.add(fullMessage[i]);
         }
 
-        this.receiverIdx = fullMessage.substring(0,indexID).getBytes(StandardCharsets.UTF_8);
-        this.receiverTag = fullMessage.substring(indexTag).getBytes(StandardCharsets.UTF_8);
-        return "message";
+        this.receiverIdx = decryptedIdx;
+        this.receiverTag = decryptedTag;
+        this.receiverSecretKey = keyDeriviationFunction(this.receiverSecretKey);
+        byte[] genericByteArr = new byte[decryptedMessage.size()];
+        for (int i = 0; i < decryptedMessage.size(); i++) {
+            genericByteArr[i] = decryptedMessage.get(i);
+        }
+        String messageResult = new String(genericByteArr);
+        messageArea.append(messageResult);
+        return messageResult;
     }
 
     //TODO: after receive generate new receiverSecretKey --> key derivation function
     //https://sorenpoulsen.com/calculate-hmac-sha256-with-java
     //https://stackoverflow.com/questions/14204437/convert-byte-array-to-secret-key
-    private void keyDeriviationFunction(SecretKey key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    private SecretKey keyDeriviationFunction(SecretKey key) throws NoSuchAlgorithmException, InvalidKeyException {
         byte[] hmacSha256;
 
         Mac mac = Mac.getInstance("HmacSHA256");
         SecretKeySpec secretKeySpec = new SecretKeySpec(key.getEncoded(), "HmacSHA256");
         mac.init(secretKeySpec);
         hmacSha256 = mac.doFinal(key.getEncoded());
-        SecretKey newKey = new SecretKeySpec(hmacSha256, 0, hmacSha256.length, "AES");
-        System.out.println(newKey);
+        return new SecretKeySpec(hmacSha256, 0, hmacSha256.length, "AES");
     }
 }
