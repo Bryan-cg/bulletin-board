@@ -66,11 +66,11 @@ public class ClientGUI {
         // Panels for ID, Tag and Key
         JPanel panel = new JPanel(new GridLayout(3, 2, 0, 0));
         panel.add(new Label("ID: "));
-        panel.add(new JLabel(Arrays.toString(myIdx)));
+        panel.add(new JTextField(Arrays.toString(myIdx)));
         panel.add(new Label("Tag: "));
-        panel.add(new JLabel(Arrays.toString(myTag)));
+        panel.add(new JTextField(Arrays.toString(myTag)));
         panel.add(new Label("Key: "));
-        panel.add(new JLabel(Arrays.toString(mySecretKey.getEncoded())));
+        panel.add(new JTextField(Arrays.toString(mySecretKey.getEncoded())));
 
         frame.getContentPane().add(panel,BorderLayout.PAGE_START);
         frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
