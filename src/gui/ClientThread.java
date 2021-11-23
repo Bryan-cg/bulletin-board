@@ -11,6 +11,7 @@ import java.rmi.RemoteException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ClientThread extends Thread {
     private final Chat bulletinBoard;
@@ -29,10 +30,21 @@ public class ClientThread extends Thread {
         this.CIPHER_INSTANCE = CIPHER_INSTANCE;
     }
 
+    public void setReceiverIdx(byte[] receiverIdx) {
+        this.receiverIdx = receiverIdx;
+    }
+
+    public void setReceiverTag(byte[] receiverTag) {
+        this.receiverTag = receiverTag;
+    }
+
+    public void setReceiverSecretKey(SecretKey receiverSecretKey) {
+        this.receiverSecretKey = receiverSecretKey;
+    }
+
     public String receive() throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
         byte[] totalMessage = bulletinBoard.get(receiverIdx, receiverTag);
         String message;
-
         if (totalMessage != null) {
             message = decryptTotalMessage(totalMessage);
             keyDeriviationFunction(receiverSecretKey);
@@ -71,22 +83,23 @@ public class ClientThread extends Thread {
             genericByteArr[i] = decryptedMessage.get(i);
         }
         String messageResult = new String(genericByteArr);
-        messageArea.append(messageResult);
+        messageArea.append(String.format("%s%n", messageResult));
         return messageResult;
     }
 
     @Override
     public void run() {
         while (true) {
-            try {
-                if (receiverIdx != null && receiverTag != null && receiverSecretKey != null) {
-                    System.out.println("called");
+            System.out.println(this.receiverSecretKey + Arrays.toString(receiverIdx) + Arrays.toString(receiverTag)); //werkt als dit er staat, anders niet, threading probleem
+            if (receiverIdx != null && receiverTag != null && receiverSecretKey != null) {
+                try {
                     receive();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
+
     }
 
     private SecretKey keyDeriviationFunction(SecretKey key) throws NoSuchAlgorithmException, InvalidKeyException {

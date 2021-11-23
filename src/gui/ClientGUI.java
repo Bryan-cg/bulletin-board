@@ -35,7 +35,7 @@ public class ClientGUI {
     JButton newReceiverButton = new JButton("Add new receiver");
     JPanel southPanel = new JPanel(new BorderLayout());
     JPanel northPanel = new JPanel(new BorderLayout());
-    JTextField idField = new JTextField(5); //geen idee wat die 5 doet eigenlijk
+    JTextField idField = new JTextField(5);
     JTextField tagField = new JTextField(5);
     JTextField keyField = new JTextField(5);
 
@@ -50,6 +50,8 @@ public class ClientGUI {
     private byte[] receiverTag = null;
     private byte[] receiverIdx = null;
     private SecretKey receiverSecretKey = null;
+
+    private ClientThread clientThread;
 
     public ClientGUI() {
 
@@ -98,7 +100,7 @@ public class ClientGUI {
         textField.addActionListener(e -> {
             try {
                 send(textField.getText());
-            } catch (RemoteException | NoSuchAlgorithmException ex) {
+            } catch (RemoteException | NoSuchAlgorithmException | InvalidKeyException ex) {
                 ex.printStackTrace();
             }
             textField.setText("");
@@ -118,25 +120,9 @@ public class ClientGUI {
                 System.out.println("Tag: " + Arrays.toString(receiverTag));
                 System.out.println("Key: " + Arrays.toString(receiverSecretKey.getEncoded()));
 
-                /*
-                try {
-                    receive();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                } catch (NoSuchAlgorithmException ex) {
-                    ex.printStackTrace();
-                } catch (NoSuchPaddingException ex) {
-                    ex.printStackTrace();
-                } catch (IllegalBlockSizeException ex) {
-                    ex.printStackTrace();
-                } catch (BadPaddingException ex) {
-                    ex.printStackTrace();
-                } catch (InvalidKeyException ex) {
-                    ex.printStackTrace();
-                }
-
-                 */
-
+                this.clientThread.setReceiverIdx(receiverIdx);
+                this.clientThread.setReceiverTag(receiverTag);
+                this.clientThread.setReceiverSecretKey(receiverSecretKey);
             }
         });
     }
@@ -214,8 +200,8 @@ public class ClientGUI {
 
             textField.setEditable(true);
 
-            Thread thread = new Thread(new ClientThread(bulletinBoard, receiverIdx, receiverTag, receiverSecretKey, messageArea, CIPHER_INSTANCE));
-            thread.start();
+            clientThread = new ClientThread(bulletinBoard, receiverIdx, receiverTag, receiverSecretKey, messageArea, CIPHER_INSTANCE);
+            clientThread.start();
 
         } finally {
             //frame.setVisible(false);
@@ -223,19 +209,16 @@ public class ClientGUI {
         }
     }
 
-    public void send(String messageContent) throws RemoteException, NoSuchAlgorithmException {
+    public void send(String messageContent) throws RemoteException, NoSuchAlgorithmException, InvalidKeyException {
         //tag and idx for next message created inside message, client doesn't need to generate new ones
         Message message = new Message(messageContent, mySecretKey, CIPHER_INSTANCE);
         bulletinBoard.write(myIdx, message.getEncryptedMessage(), myTag);
         this.myTag = message.getTag();
         this.myIdx = message.getIdx();
-        int test = new BigInteger(myIdx).intValue();
 
         messageArea.append(String.format("%s: %s%n", this.name, messageContent));
-        //TODO: generate new mySecretkey --> key derivation function
-
+        this.mySecretKey = keyDeriviationFunction(this.mySecretKey);
     }
-
 
     private SecretKey keyDeriviationFunction(SecretKey key) throws NoSuchAlgorithmException, InvalidKeyException {
         byte[] hmacSha256;
