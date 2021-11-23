@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Random;
 
 public class Message {
@@ -78,4 +79,5 @@ public class Message {
     public byte[] getEncryptedMessage() {
         return encryptedMessage;
     }
+
 }

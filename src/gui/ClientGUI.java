@@ -98,7 +98,7 @@ public class ClientGUI {
         textField.addActionListener(e -> {
             try {
                 send(textField.getText());
-            } catch (RemoteException ex) {
+            } catch (RemoteException | NoSuchAlgorithmException ex) {
                 ex.printStackTrace();
             }
             textField.setText("");
@@ -110,7 +110,7 @@ public class ClientGUI {
                     "Please enter the ID, Tag and Key", JOptionPane.OK_CANCEL_OPTION);
 
             if (result == JOptionPane.OK_OPTION) {
-                receiverIdx = convertStringToByteArr(idField.getText()) ;
+                receiverIdx = convertStringToByteArr(idField.getText());
                 receiverTag = convertStringToByteArr(tagField.getText());
                 receiverSecretKey = new SecretKeySpec(convertStringToByteArr(keyField.getText()), 0, convertStringToByteArr(keyField.getText()).length, "AES");
 
@@ -118,6 +118,7 @@ public class ClientGUI {
                 System.out.println("Tag: " + Arrays.toString(receiverTag));
                 System.out.println("Key: " + Arrays.toString(receiverSecretKey.getEncoded()));
 
+                /*
                 try {
                     receive();
                 } catch (IOException ex) {
@@ -134,6 +135,8 @@ public class ClientGUI {
                     ex.printStackTrace();
                 }
 
+                 */
+
             }
         });
     }
@@ -141,7 +144,7 @@ public class ClientGUI {
     private byte[] convertStringToByteArr(String stringByteArr) {
         String[] bytesString = stringByteArr.split(", ");
         byte[] bytes = new byte[bytesString.length];
-        for(int i = 0 ; i < bytes.length ; ++i) {
+        for (int i = 0; i < bytes.length; ++i) {
             bytes[i] = Byte.parseByte(bytesString[i]);
         }
         return bytes;
@@ -211,22 +214,16 @@ public class ClientGUI {
 
             textField.setEditable(true);
 
-            while (true) {
-                //TODO get message by tag and idx
-                if (receiverTag != null && receiverIdx != null && receiverSecretKey != null) {
-                    receive();
-                }
-
-                //TODO maybe only poll for messages when button is pressed?
-            }
+            Thread thread = new Thread(new ClientThread(bulletinBoard, receiverIdx, receiverTag, receiverSecretKey, messageArea, CIPHER_INSTANCE));
+            thread.start();
 
         } finally {
-            frame.setVisible(false);
-            frame.dispose();
+            //frame.setVisible(false);
+            //frame.dispose();
         }
     }
 
-    public void send(String messageContent) throws RemoteException {
+    public void send(String messageContent) throws RemoteException, NoSuchAlgorithmException {
         //tag and idx for next message created inside message, client doesn't need to generate new ones
         Message message = new Message(messageContent, mySecretKey, CIPHER_INSTANCE);
         bulletinBoard.write(myIdx, message.getEncryptedMessage(), myTag);
@@ -240,53 +237,6 @@ public class ClientGUI {
     }
 
 
-    public String receive() throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-        byte[] totalMessage = bulletinBoard.get(receiverIdx, receiverTag);
-        String message;
-
-        if (totalMessage != null) {
-            message = decryptTotalMessage(totalMessage);
-            keyDeriviationFunction(receiverSecretKey);
-            return message;
-        }
-        return null;
-    }
-
-    //TODO update receiverIdx and receiverTag from message content and return the actual message
-    private String decryptTotalMessage(byte[] totalMessage) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        final Cipher cipher;
-        cipher = Cipher.getInstance(CIPHER_INSTANCE);
-        cipher.init(Cipher.DECRYPT_MODE, receiverSecretKey);
-        return splitTotalMessage(cipher.doFinal(totalMessage));
-    }
-
-    private String splitTotalMessage(byte[] fullMessage) throws NoSuchAlgorithmException, InvalidKeyException {
-        byte[] decryptedIdx = new byte[1];
-        byte[] decryptedTag = new byte[32];
-        ArrayList<Byte> decryptedMessage = new ArrayList<>(); //Needs to be message size --> variable
-
-        decryptedIdx[0] = fullMessage[0];
-        System.arraycopy(fullMessage, 1, decryptedTag, 1, 32);
-
-        for (int i = 33; i < fullMessage.length; i++) {
-            decryptedMessage.add(fullMessage[i]);
-        }
-
-        this.receiverIdx = decryptedIdx;
-        this.receiverTag = decryptedTag;
-        this.receiverSecretKey = keyDeriviationFunction(this.receiverSecretKey);
-        byte[] genericByteArr = new byte[decryptedMessage.size()];
-        for (int i = 0; i < decryptedMessage.size(); i++) {
-            genericByteArr[i] = decryptedMessage.get(i);
-        }
-        String messageResult = new String(genericByteArr);
-        messageArea.append(messageResult);
-        return messageResult;
-    }
-
-    //TODO: after receive generate new receiverSecretKey --> key derivation function
-    //https://sorenpoulsen.com/calculate-hmac-sha256-with-java
-    //https://stackoverflow.com/questions/14204437/convert-byte-array-to-secret-key
     private SecretKey keyDeriviationFunction(SecretKey key) throws NoSuchAlgorithmException, InvalidKeyException {
         byte[] hmacSha256;
 
