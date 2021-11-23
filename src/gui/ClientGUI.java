@@ -31,11 +31,11 @@ public class ClientGUI {
     JTextField textField = new JTextField(50);
     JTextArea messageArea = new JTextArea(16, 50);
     JButton newReceiverButton = new JButton("Add new receiver");
-    JPanel innerPanel= new JPanel(new BorderLayout());
-    JTextField idField = new JTextField(5);
+    JPanel southPanel = new JPanel(new BorderLayout());
+    JPanel northPanel = new JPanel(new BorderLayout());
+    JTextField idField = new JTextField(5); //geen idee wat die 5 doet eigenlijk
     JTextField tagField = new JTextField(5);
     JTextField keyField = new JTextField(5);
-
 
     //Encryption
     private final String CIPHER_INSTANCE = "AES/ECB/PKCS5Padding";
@@ -60,10 +60,21 @@ public class ClientGUI {
         // Code for starting screen
         textField.setEditable(false);
         messageArea.setEditable(false);
-        innerPanel.add(newReceiverButton, BorderLayout.EAST);
-        innerPanel.add(textField, BorderLayout.WEST);
+        southPanel.add(newReceiverButton, BorderLayout.EAST);
+        southPanel.add(textField, BorderLayout.WEST);
+
+        // Panels for ID, Tag and Key
+        JPanel panel = new JPanel(new GridLayout(3, 2, 0, 0));
+        panel.add(new Label("ID: "));
+        panel.add(new JLabel(Arrays.toString(myIdx)));
+        panel.add(new Label("Tag: "));
+        panel.add(new JLabel(Arrays.toString(myTag)));
+        panel.add(new Label("Key: "));
+        panel.add(new JLabel(Arrays.toString(mySecretKey.getEncoded())));
+
+        frame.getContentPane().add(panel,BorderLayout.PAGE_START);
         frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
-        frame.getContentPane().add(innerPanel,BorderLayout.SOUTH);
+        frame.getContentPane().add(southPanel,BorderLayout.SOUTH);
         frame.pack();
 
         // Code for popup screen: new receiver
@@ -111,6 +122,11 @@ public class ClientGUI {
         final Random r = new Random();
         int randomIndex = r.nextInt(20);
         this.myIdx = BigInteger.valueOf(randomIndex).toByteArray();
+
+        // Debugging: printing ID, Tag and Key
+        System.out.println("This ID: " + Arrays.toString(myIdx));
+        System.out.println("This Tag: " + Arrays.toString(myTag));
+        System.out.println("This Key: " + Arrays.toString(mySecretKey.getEncoded()));
     }
 
     public static void main(String[] args) throws Exception {
