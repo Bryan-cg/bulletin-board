@@ -1,5 +1,6 @@
 package gui;
 
+import models.ClientProperties;
 import shared.Chat;
 import models.Message;
 
@@ -10,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -17,8 +19,8 @@ import java.rmi.registry.Registry;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
+import java.util.List;
 
 //TODO's (other)
 // Show tag, idx & secretkey in gui, so you can copy paste it in other client.
@@ -38,24 +40,14 @@ public class ClientGUI {
     //Encryption
     private final String CIPHER_INSTANCE = "AES/ECB/PKCS5Padding";
 
-    //implementation with 1 receiver client
-    private byte[] myTag;
-    private byte[] myIdx;
-    private SecretKey mySecretKey;
+    private volatile HashMap<String, ClientProperties> myProperties = new HashMap<>();
+    private volatile HashMap<String, ClientProperties> receiversProperties = new HashMap<>();
+    private String currentClientName;
 
-    private volatile byte[] receiverTag = null;
-    private volatile byte[] receiverIdx = null;
-    private volatile SecretKey receiverSecretKey = null;
 
     private ClientThread clientThread;
 
     public ClientGUI() {
-
-        try {
-            initializeEncryption();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
 
         // Code for starting screen
         //TODO: borderlayout:   north "Conncetions"
@@ -110,16 +102,15 @@ public class ClientGUI {
                     "Please enter the ID, Tag and Key", JOptionPane.OK_CANCEL_OPTION);
 
             if (result == JOptionPane.OK_OPTION) {
-                receiverIdx = convertStringToByteArr(idField.getText());
-                receiverTag = convertStringToByteArr(tagField.getText());
-                receiverSecretKey = new SecretKeySpec(convertStringToByteArr(keyField.getText()), 0, convertStringToByteArr(keyField.getText()).length, "AES");
-                //receiverName = nameField.getText();
 
-                this.clientThread.setReceiverIdx(receiverIdx);
-                this.clientThread.setReceiverTag(receiverTag);
-                this.clientThread.setReceiverSecretKey(receiverSecretKey);
-                //this.clientThread.setReceiverName(receiverName);
+                byte[] receiverIdx = convertStringToByteArr(idField.getText());
+                byte[] receiverTag = convertStringToByteArr(tagField.getText());
+                SecretKey receiverSecretKey = new SecretKeySpec(convertStringToByteArr(keyField.getText()), 0, convertStringToByteArr(keyField.getText()).length, "AES");
+                ClientProperties clientProperties = new ClientProperties(receiverTag, receiverIdx, receiverSecretKey);
+                receiversProperties.put(receiverName, clientProperties);
 
+                this.clientThread.setReceiversProperties(myProperties);
+                createNewButton("name",receiverIdx,receiverTag,receiverSecretKey);
                 //TODO: Add a new button for the new client
                 JButton newClient = new JButton("Test 5");
                 //newClient.addActionListener();
@@ -139,26 +130,21 @@ public class ClientGUI {
         return bytes;
     }
 
-    private void initializeEncryption() throws NoSuchAlgorithmException {
+    private void initializeMyPropertiesNewClient(String clientName) throws NoSuchAlgorithmException {
         //Symmetric key
-        this.mySecretKey = generateKeyAES(256);
+        SecretKey mySecretKey = generateKeyAES(256);
 
         //tag
         byte[] tagBytes = new byte[32];
         SecureRandom.getInstanceStrong().nextBytes(tagBytes);
-        this.myTag = tagBytes;
 
         //idx
         final Random r = new Random();
         int randomIndex = r.nextInt(20);
-        this.myIdx = BigInteger.valueOf(randomIndex).toByteArray();
-        System.out.println(randomIndex);
+        byte[] myIdx = BigInteger.valueOf(randomIndex).toByteArray();
 
-
-        // Debugging: printing ID, Tag and Key
-        System.out.println("This ID: " + Arrays.toString(myIdx));
-        System.out.println("This Tag: " + Arrays.toString(myTag));
-        System.out.println("This Key: " + Arrays.toString(mySecretKey.getEncoded()));
+        ClientProperties myClientProperties = new ClientProperties(tagBytes, myIdx, mySecretKey);
+        myProperties.put(clientName, myClientProperties);
     }
 
     public static void main(String[] args) throws Exception {
@@ -201,7 +187,7 @@ public class ClientGUI {
 
             textField.setEditable(true);
 
-            clientThread = new ClientThread(bulletinBoard, receiverIdx, receiverTag, receiverSecretKey, messageArea, CIPHER_INSTANCE);
+            clientThread = new ClientThread(bulletinBoard, myProperties, receiversProperties, messageArea, CIPHER_INSTANCE);
             clientThread.start();
 
         } finally {
@@ -210,15 +196,18 @@ public class ClientGUI {
         }
     }
 
-    public void send(String messageContent) throws RemoteException, NoSuchAlgorithmException, InvalidKeyException {
-        //tag and idx for next message created inside message, client doesn't need to generate new ones
-        Message message = new Message(messageContent, mySecretKey, CIPHER_INSTANCE);
-        bulletinBoard.write(myIdx, message.getEncryptedMessage(), myTag);
-        this.myTag = message.getTag();
-        this.myIdx = message.getIdx();
+    public void send(String messageContent, String name) throws RemoteException, NoSuchAlgorithmException, InvalidKeyException {
+        ClientProperties myClientProperties = myProperties.get(name);
 
+        //tag and idx for next message created inside message, client doesn't need to generate new ones
+        Message message = new Message(messageContent, myClientProperties.getSecretKey(), CIPHER_INSTANCE);
+        bulletinBoard.write(myClientProperties.getIdx(), message.getEncryptedMessage(), myClientProperties.getTag());
+        myClientProperties.setTag(message.getTag());
+        myClientProperties.setIdx(message.getIdx());
+
+        //TODO: write to dialog
         messageArea.append(String.format("%s: %s%n", this.name, messageContent));
-        this.mySecretKey = keyDeriviationFunction(this.mySecretKey);
+        myClientProperties.setSecretKey(keyDeriviationFunction(myClientProperties.getSecretKey()));
     }
 
     private SecretKey keyDeriviationFunction(SecretKey key) throws NoSuchAlgorithmException, InvalidKeyException {

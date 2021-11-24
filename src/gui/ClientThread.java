@@ -1,45 +1,45 @@
 package gui;
 
-import server.BulletinBoard;
+import models.ClientProperties;
 import shared.Chat;
 
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 
 public class ClientThread extends Thread {
     private final Chat bulletinBoard;
-    private volatile byte[] receiverIdx = null;
-    private volatile byte[] receiverTag = null;
-    private volatile SecretKey receiverSecretKey = null;
+    private volatile HashMap<String, ClientProperties> myProperties = null;
+    private volatile HashMap<String, ClientProperties> receiversProperties = null;
+
     private final JTextArea messageArea;
     private final String CIPHER_INSTANCE;
 
-    public ClientThread(Chat bulletinBoard, byte[] receiverIdx, byte[] receiverTag, SecretKey receiverSecretKey, JTextArea messageArea, String CIPHER_INSTANCE) {
+    public ClientThread(
+            Chat bulletinBoard,
+            HashMap<String, ClientProperties> myProperties,
+            HashMap<String, ClientProperties> receiversProperties,
+            JTextArea messageArea,
+            String CIPHER_INSTANCE) {
+
         this.bulletinBoard = bulletinBoard;
-        this.receiverIdx = receiverIdx;
-        this.receiverTag = receiverTag;
-        this.receiverSecretKey = receiverSecretKey;
+        this.myProperties = myProperties;
+        this.receiversProperties = receiversProperties;
         this.messageArea = messageArea;
         this.CIPHER_INSTANCE = CIPHER_INSTANCE;
     }
 
-    public void setReceiverIdx(byte[] receiverIdx) {
-        this.receiverIdx = receiverIdx;
+    public void setMyProperties(HashMap<String, ClientProperties> myProperties) {
+        this.myProperties = myProperties;
     }
 
-    public void setReceiverTag(byte[] receiverTag) {
-        this.receiverTag = receiverTag;
-    }
-
-    public void setReceiverSecretKey(SecretKey receiverSecretKey) {
-        this.receiverSecretKey = receiverSecretKey;
+    public void setReceiversProperties(HashMap<String, ClientProperties> receiversProperties) {
+        this.receiversProperties = receiversProperties;
     }
 
     public String receive() throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
