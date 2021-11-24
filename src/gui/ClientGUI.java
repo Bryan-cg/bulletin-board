@@ -98,9 +98,9 @@ public class ClientGUI {
                 byte[] receiverTag = convertStringToByteArr(tagField.getText());
                 SecretKey receiverSecretKey = new SecretKeySpec(convertStringToByteArr(keyField.getText()), 0, convertStringToByteArr(keyField.getText()).length, "AES");
                 ClientProperties clientProperties = new ClientProperties(receiverTag, receiverIdx, receiverSecretKey);
-                receiversProperties.put(receiverName, clientProperties);
+                receiversProperties.put("test", clientProperties);
 
-                this.clientThread.setReceiversProperties(myProperties);
+                //this.clientThread.setReceiversProperties(receiversProperties);
 
                 //TODO: Add a new button for the new client
                 JButton newClient = new JButton(currentClientName);
@@ -178,8 +178,8 @@ public class ClientGUI {
 
             textField.setEditable(true);
 
-            clientThread = new ClientThread(bulletinBoard, myProperties, receiversProperties, messageArea, CIPHER_INSTANCE);
-            clientThread.start();
+            //clientThread = new ClientThread(bulletinBoard, myProperties, receiversProperties, messageArea, CIPHER_INSTANCE);
+            //clientThread.start();
 
         } finally {
             //frame.setVisible(false);

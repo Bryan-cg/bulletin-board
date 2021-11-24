@@ -1,5 +1,6 @@
 package gui;
 
+import com.sun.security.ntlm.Client;
 import models.ClientProperties;
 import shared.Chat;
 
@@ -16,6 +17,7 @@ public class ClientThread extends Thread {
     private final Chat bulletinBoard;
     private volatile HashMap<String, ClientProperties> myProperties = null;
     private volatile HashMap<String, ClientProperties> receiversProperties = null;
+    private String currentClientName;
 
     private final JTextArea messageArea;
     private final String CIPHER_INSTANCE;
@@ -43,11 +45,12 @@ public class ClientThread extends Thread {
     }
 
     public String receive() throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-        byte[] totalMessage = bulletinBoard.get(receiverIdx, receiverTag);
+        ClientProperties receiverClientProperties = receiversProperties.get(currentClientName);
+        byte[] totalMessage = bulletinBoard.get(receiverClientProperties.getIdx(), receiverClientProperties.getTag());
         String message;
         if (totalMessage != null) {
             message = decryptTotalMessage(totalMessage);
-            keyDeriviationFunction(receiverSecretKey);
+            keyDeriviationFunction(receiverClientProperties.getSecretKey());
             return message;
         }
         return null;
@@ -55,9 +58,10 @@ public class ClientThread extends Thread {
 
     //TODO update receiverIdx and receiverTag from message content and return the actual message
     private String decryptTotalMessage(byte[] totalMessage) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        ClientProperties clientProperties = receiversProperties.get(currentClientName);
         final Cipher cipher;
         cipher = Cipher.getInstance(CIPHER_INSTANCE);
-        cipher.init(Cipher.DECRYPT_MODE, receiverSecretKey);
+        cipher.init(Cipher.DECRYPT_MODE, clientProperties.getSecretKey());
         return splitTotalMessage(cipher.doFinal(totalMessage));
     }
 
@@ -75,9 +79,11 @@ public class ClientThread extends Thread {
             decryptedMessage.add(fullMessage[i]);
         }
 
-        this.receiverIdx = decryptedIdx;
-        this.receiverTag = decryptedTag;
-        this.receiverSecretKey = keyDeriviationFunction(this.receiverSecretKey);
+        ClientProperties receiverClientProperties = receiversProperties.get(currentClientName);
+        receiverClientProperties.setIdx(decryptedIdx);
+        receiverClientProperties.setTag(decryptedTag);
+        receiverClientProperties.setSecretKey(keyDeriviationFunction(receiverClientProperties.getSecretKey()));
+
         byte[] genericByteArr = new byte[decryptedMessage.size()];
         for (int i = 0; i < decryptedMessage.size(); i++) {
             genericByteArr[i] = decryptedMessage.get(i);
@@ -90,12 +96,10 @@ public class ClientThread extends Thread {
     @Override
     public void run() {
         while (true) {
-            if (receiverIdx != null && receiverTag != null && receiverSecretKey != null) {
-                try {
-                    receive();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            try {
+                receive();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 
