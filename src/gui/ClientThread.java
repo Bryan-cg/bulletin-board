@@ -1,6 +1,5 @@
 package gui;
 
-import com.sun.security.ntlm.Client;
 import models.ClientProperties;
 import shared.Chat;
 
@@ -17,7 +16,7 @@ public class ClientThread extends Thread {
     private final Chat bulletinBoard;
     private volatile HashMap<String, ClientProperties> myProperties = null;
     private volatile HashMap<String, ClientProperties> receiversProperties = null;
-    private String currentClientName;
+    private volatile String currentClientName = null;
 
     private final JTextArea messageArea;
     private final String CIPHER_INSTANCE;
@@ -42,6 +41,10 @@ public class ClientThread extends Thread {
 
     public void setReceiversProperties(HashMap<String, ClientProperties> receiversProperties) {
         this.receiversProperties = receiversProperties;
+    }
+
+    public void setCurrentClientName(String currentClientName) {
+        this.currentClientName = currentClientName;
     }
 
     public String receive() throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
@@ -96,11 +99,14 @@ public class ClientThread extends Thread {
     @Override
     public void run() {
         while (true) {
-            try {
-                receive();
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (currentClientName != null) {
+                try {
+                    receive();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
+
         }
 
     }

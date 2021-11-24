@@ -102,7 +102,7 @@ public class ClientGUI {
                 SecretKey receiverSecretKey = new SecretKeySpec(convertStringToByteArr(keyField.getText()), 0, convertStringToByteArr(keyField.getText()).length, "AES");
                 String receiverName = nameField.getText();
                 ClientProperties clientProperties = new ClientProperties(receiverTag, receiverIdx, receiverSecretKey);
-                receiversProperties.put("test", clientProperties);
+                receiversProperties.put(receiverName, clientProperties);
 
                 //this.clientThread.setReceiversProperties(receiversProperties);
 
@@ -182,8 +182,8 @@ public class ClientGUI {
 
             textField.setEditable(true);
 
-            //clientThread = new ClientThread(bulletinBoard, myProperties, receiversProperties, messageArea, CIPHER_INSTANCE);
-            //clientThread.start();
+            clientThread = new ClientThread(bulletinBoard, myProperties, receiversProperties, messageArea, CIPHER_INSTANCE);
+            clientThread.start();
 
         } finally {
             //frame.setVisible(false);
