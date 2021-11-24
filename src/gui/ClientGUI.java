@@ -31,8 +31,6 @@ public class ClientGUI {
     JTextField textField = new JTextField(50);
     JTextArea messageArea = new JTextArea(16, 50);
     JButton newClientButton = new JButton("Add new client");
-    JPanel southPanel = new JPanel(new BorderLayout());
-    JPanel northPanel = new JPanel(new BorderLayout());
     JTextField idField = new JTextField(5);
     JTextField tagField = new JTextField(5);
     JTextField keyField = new JTextField(5);
@@ -65,6 +63,9 @@ public class ClientGUI {
         //                      center de effectieve buttons met clients
         JLabel conncetions = new JLabel("Connections");
         JPanel buttonPanel = new JPanel(new FlowLayout());
+        JPanel southPanel = new JPanel(new BorderLayout());
+        southPanel.add(newClientButton, BorderLayout.EAST);
+        southPanel.add(textField, BorderLayout.WEST);
         JButton test1 = new JButton("Test 1");
         JButton test2 = new JButton("Test 2");
         JButton test3 = new JButton("Test 3");
@@ -76,30 +77,12 @@ public class ClientGUI {
 
         textField.setEditable(false);
         messageArea.setEditable(false);
-        southPanel.add(newClientButton, BorderLayout.EAST);
-        southPanel.add(textField, BorderLayout.WEST);
 
-        // Panels for ID, Tag and Key
-        GridLayout layout = new GridLayout(3,2);
-        layout.setHgap(25);
-        JPanel panel = new JPanel(layout);
-        panel.add(new Label("ID: "));
-        JTextField textFieldId = new JTextField(Arrays.toString(myIdx));
-        textFieldId.setEditable(false);
-        panel.add(textFieldId);
-        panel.add(new Label("Tag: "));
-        JTextField textFieldTag = new JTextField(Arrays.toString(myTag));
-        textFieldTag.setEditable(false);
-        panel.add(textFieldTag);
-        panel.add(new Label("Key: "));
-        JTextField textFieldKey = new JTextField(Arrays.toString(mySecretKey.getEncoded()));
-        textFieldKey.setEditable(false);
-        panel.add(textFieldKey);
 
         frame.getContentPane().add(conncetions, BorderLayout.NORTH);
         frame.getContentPane().add(buttonPanel, BorderLayout.CENTER);
-        frame.getContentPane().add(newClientButton, BorderLayout.SOUTH);
-        frame.setSize(600,390);
+        frame.getContentPane().add(southPanel, BorderLayout.SOUTH);
+        frame.setSize(750,390);
         frame.setLocationRelativeTo(null);
 
         // Code for popup screen: new receiver
@@ -138,14 +121,13 @@ public class ClientGUI {
                 //this.clientThread.setReceiverName(receiverName);
 
                 //TODO: Add a new button for the new client
-                createNewButton("name",receiverIdx,receiverTag,receiverSecretKey);
+                JButton newClient = new JButton("Test 5");
+                //newClient.addActionListener();
+                buttonPanel.add(newClient);
+                frame.getContentPane().add(buttonPanel, BorderLayout.CENTER);
+                SwingUtilities.updateComponentTreeUI(frame);
             }
         });
-    }
-
-    private void createNewButton(String name, byte[] receiverIdx, byte[] receiverTag, SecretKey receiverSecretKey) {
-        JButton newConnection = new JButton("Test 5");
-        frame.getContentPane().add(newConnection, BorderLayout.WEST);
     }
 
     private byte[] convertStringToByteArr(String stringByteArr) {
