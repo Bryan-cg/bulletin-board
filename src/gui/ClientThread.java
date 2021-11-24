@@ -87,7 +87,6 @@ public class ClientThread extends Thread {
         return messageResult;
     }
 
-    //TODO: THREADING PROBLEM BELOW
     @Override
     public void run() {
         while (true) {

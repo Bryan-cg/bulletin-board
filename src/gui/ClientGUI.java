@@ -10,7 +10,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -18,7 +17,6 @@ import java.rmi.registry.Registry;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -32,7 +30,7 @@ public class ClientGUI {
     JFrame frame = new JFrame("Chatter");
     JTextField textField = new JTextField(50);
     JTextArea messageArea = new JTextArea(16, 50);
-    JButton newReceiverButton = new JButton("Add new receiver");
+    JButton newClientButton = new JButton("Add new client");
     JPanel southPanel = new JPanel(new BorderLayout());
     JPanel northPanel = new JPanel(new BorderLayout());
     JTextField idField = new JTextField(5);
@@ -62,13 +60,29 @@ public class ClientGUI {
         }
 
         // Code for starting screen
+        //TODO: borderlayout:   north "Conncetions"
+        //                      south button newClientButton
+        //                      center de effectieve buttons met clients
+        JLabel conncetions = new JLabel("Connections");
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JButton test1 = new JButton("Test 1");
+        JButton test2 = new JButton("Test 2");
+        JButton test3 = new JButton("Test 3");
+        JButton test4 = new JButton("Test 4");
+        buttonPanel.add(test1);
+        buttonPanel.add(test2);
+        buttonPanel.add(test3);
+        buttonPanel.add(test4);
+
         textField.setEditable(false);
         messageArea.setEditable(false);
-        southPanel.add(newReceiverButton, BorderLayout.EAST);
+        southPanel.add(newClientButton, BorderLayout.EAST);
         southPanel.add(textField, BorderLayout.WEST);
 
         // Panels for ID, Tag and Key
-        JPanel panel = new JPanel(new GridLayout(3, 2, 0, 0));
+        GridLayout layout = new GridLayout(3,2);
+        layout.setHgap(25);
+        JPanel panel = new JPanel(layout);
         panel.add(new Label("ID: "));
         JTextField textFieldId = new JTextField(Arrays.toString(myIdx));
         textFieldId.setEditable(false);
@@ -82,10 +96,11 @@ public class ClientGUI {
         textFieldKey.setEditable(false);
         panel.add(textFieldKey);
 
-        frame.getContentPane().add(panel, BorderLayout.PAGE_START);
-        frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
-        frame.getContentPane().add(southPanel, BorderLayout.SOUTH);
-        frame.pack();
+        frame.getContentPane().add(conncetions, BorderLayout.NORTH);
+        frame.getContentPane().add(buttonPanel, BorderLayout.CENTER);
+        frame.getContentPane().add(newClientButton, BorderLayout.SOUTH);
+        frame.setSize(600,390);
+        frame.setLocationRelativeTo(null);
 
         // Code for popup screen: new receiver
         JPanel myPanel = new JPanel();
@@ -107,7 +122,7 @@ public class ClientGUI {
         });
 
         // Action when button pressed
-        newReceiverButton.addActionListener(e -> {
+        newClientButton.addActionListener(e -> {
             int result = JOptionPane.showConfirmDialog(null, myPanel,
                     "Please enter the ID, Tag and Key", JOptionPane.OK_CANCEL_OPTION);
 
@@ -115,16 +130,22 @@ public class ClientGUI {
                 receiverIdx = convertStringToByteArr(idField.getText());
                 receiverTag = convertStringToByteArr(tagField.getText());
                 receiverSecretKey = new SecretKeySpec(convertStringToByteArr(keyField.getText()), 0, convertStringToByteArr(keyField.getText()).length, "AES");
-
-                System.out.println("ID: " + Arrays.toString(receiverIdx));
-                System.out.println("Tag: " + Arrays.toString(receiverTag));
-                System.out.println("Key: " + Arrays.toString(receiverSecretKey.getEncoded()));
+                //receiverName = nameField.getText();
 
                 this.clientThread.setReceiverIdx(receiverIdx);
                 this.clientThread.setReceiverTag(receiverTag);
                 this.clientThread.setReceiverSecretKey(receiverSecretKey);
+                //this.clientThread.setReceiverName(receiverName);
+
+                //TODO: Add a new button for the new client
+                createNewButton("name",receiverIdx,receiverTag,receiverSecretKey);
             }
         });
+    }
+
+    private void createNewButton(String name, byte[] receiverIdx, byte[] receiverTag, SecretKey receiverSecretKey) {
+        JButton newConnection = new JButton("Test 5");
+        frame.getContentPane().add(newConnection, BorderLayout.WEST);
     }
 
     private byte[] convertStringToByteArr(String stringByteArr) {
@@ -156,9 +177,6 @@ public class ClientGUI {
         System.out.println("This ID: " + Arrays.toString(myIdx));
         System.out.println("This Tag: " + Arrays.toString(myTag));
         System.out.println("This Key: " + Arrays.toString(mySecretKey.getEncoded()));
-        System.out.println("Key length: " + mySecretKey.getEncoded().length);
-        System.out.println("ID length: " + myIdx.length);
-        System.out.println("Tag length: " + myTag.length);
     }
 
     public static void main(String[] args) throws Exception {
