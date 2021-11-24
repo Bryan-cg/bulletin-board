@@ -47,9 +47,9 @@ public class ClientGUI {
     private byte[] myIdx;
     private SecretKey mySecretKey;
 
-    private byte[] receiverTag = null;
-    private byte[] receiverIdx = null;
-    private SecretKey receiverSecretKey = null;
+    private volatile byte[] receiverTag = null;
+    private volatile byte[] receiverIdx = null;
+    private volatile SecretKey receiverSecretKey = null;
 
     private ClientThread clientThread;
 
@@ -166,6 +166,7 @@ public class ClientGUI {
         client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         client.frame.setVisible(true);
         client.run();
+
     }
 
     private String getName() {

@@ -15,9 +15,9 @@ import java.util.Arrays;
 
 public class ClientThread extends Thread {
     private final Chat bulletinBoard;
-    private byte[] receiverIdx = null;
-    private byte[] receiverTag = null;
-    private SecretKey receiverSecretKey = null;
+    private volatile byte[] receiverIdx = null;
+    private volatile byte[] receiverTag = null;
+    private volatile SecretKey receiverSecretKey = null;
     private final JTextArea messageArea;
     private final String CIPHER_INSTANCE;
 
@@ -91,7 +91,6 @@ public class ClientThread extends Thread {
     @Override
     public void run() {
         while (true) {
-            System.out.println(); //werkt als dit er staat, anders niet, threading probleem
             if (receiverIdx != null && receiverTag != null && receiverSecretKey != null) {
                 try {
                     receive();
