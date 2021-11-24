@@ -1,6 +1,7 @@
 package gui;
 
 import models.ClientProperties;
+import net.miginfocom.swing.MigLayout;
 import shared.Chat;
 import models.Message;
 
@@ -11,7 +12,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -20,19 +20,26 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.List;
 
 //TODO's (other)
 // Show tag, idx & secretkey in gui, so you can copy paste it in other client.
 
 public class ClientGUI {
 
+    // General attributes
     Chat bulletinBoard;
     String name;
+
+    // Attributes for frame
     JFrame frame = new JFrame("Chatter");
-    JTextField textField = new JTextField(50);
-    JTextArea messageArea = new JTextArea(16, 50);
-    JButton newClientButton = new JButton("Add new client");
+    JPanel buttonPanel;
+    JScrollPane scrollPane;
+    JTextArea messageArea;
+    JTextField textField;
+    JButton addNewClientButton;
+
+    // Attributes for popup screen
+    JPanel myPanel = new JPanel(new GridLayout(4, 1)); // 2 rows x 1 column
     JTextField idField = new JTextField(5);
     JTextField tagField = new JTextField(5);
     JTextField keyField = new JTextField(5);
@@ -49,36 +56,8 @@ public class ClientGUI {
 
     public ClientGUI() {
 
-        // Code for starting screen
-        //TODO: borderlayout:   north "Conncetions"
-        //                      south button newClientButton
-        //                      center de effectieve buttons met clients
-        JLabel conncetions = new JLabel("Connections");
-        JPanel buttonPanel = new JPanel(new FlowLayout());
-        JPanel southPanel = new JPanel(new BorderLayout());
-        southPanel.add(newClientButton, BorderLayout.EAST);
-        southPanel.add(textField, BorderLayout.WEST);
-
-        textField.setEditable(false);
-        messageArea.setEditable(false);
-
-
-        frame.getContentPane().add(conncetions, BorderLayout.NORTH);
-        frame.getContentPane().add(buttonPanel, BorderLayout.CENTER);
-        frame.getContentPane().add(southPanel, BorderLayout.SOUTH);
-        frame.setSize(625,390);
-        frame.setLocationRelativeTo(null);
-
-        // Code for popup screen: new receiver
-        JPanel myPanel = new JPanel();
-        myPanel.add(new JLabel("ID: "));
-        myPanel.add(idField);
-        myPanel.add(new JLabel("Tag: "));
-        myPanel.add(tagField);
-        myPanel.add(new JLabel("Key: "));
-        myPanel.add(keyField);
-        myPanel.add(new JLabel("Name: "));
-        myPanel.add(nameField);
+        // Initializing the JavaSwing components
+        initComponents();
 
         // On enter
         textField.addActionListener(e -> {
@@ -90,13 +69,35 @@ public class ClientGUI {
             textField.setText("");
         });
 
-        // Action when button pressed
-        newClientButton.addActionListener(e -> {
+
+        // Action when addNewClientButton pressed
+        addNewClientButton.addActionListener(e -> {
+
+            // Create new ID, Tag and Key for the new client
+            ClientProperties newProperties = null;
+            try {
+                newProperties= initializeMyPropertiesNewClient();
+            } catch (NoSuchAlgorithmException ex) {
+                ex.printStackTrace();
+            }
+
+            JPanel bottomRow1 = new JPanel();
+            bottomRow1.add(new JLabel("ID: "));
+            bottomRow1.add(new JLabel(Arrays.toString(newProperties.getIdx())));
+            JPanel bottomRow2 = new JPanel();
+            bottomRow2.add(new JLabel("Tag: "));
+            bottomRow2.add(new JLabel(Arrays.toString(newProperties.getTag())));
+            JPanel bottomRow3 = new JPanel();
+            bottomRow3.add(new JLabel("Key: "));
+            bottomRow3.add(new JLabel(Arrays.toString(newProperties.getSecretKey().getEncoded())));
+            myPanel.add(bottomRow1);
+            myPanel.add(bottomRow2);
+            myPanel.add(bottomRow3);
+
             int result = JOptionPane.showConfirmDialog(null, myPanel,
                     "Please enter the ID, Tag and Key", JOptionPane.OK_CANCEL_OPTION);
 
             if (result == JOptionPane.OK_OPTION) {
-
                 byte[] receiverIdx = convertStringToByteArr(idField.getText());
                 byte[] receiverTag = convertStringToByteArr(tagField.getText());
                 SecretKey receiverSecretKey = new SecretKeySpec(convertStringToByteArr(keyField.getText()), 0, convertStringToByteArr(keyField.getText()).length, "AES");
@@ -104,14 +105,19 @@ public class ClientGUI {
                 ClientProperties clientProperties = new ClientProperties(receiverTag, receiverIdx, receiverSecretKey);
                 receiversProperties.put(receiverName, clientProperties);
 
+                // Adding the properties tot the right map
+                myProperties.put(receiverName,clientProperties);
+
                 //this.clientThread.setReceiversProperties(receiversProperties);
 
                 //TODO: Add a new button for the new client
                 JButton newClient = new JButton(receiverName);
-                //newClient.addActionListener();
+                newClient.addActionListener(event -> {
+                    //messageArea.clearofso
+                });
                 buttonPanel.add(newClient);
-                frame.getContentPane().add(buttonPanel, BorderLayout.CENTER);
                 SwingUtilities.updateComponentTreeUI(frame);
+                System.out.println(myProperties);
             }
         });
     }
@@ -125,7 +131,7 @@ public class ClientGUI {
         return bytes;
     }
 
-    private void initializeMyPropertiesNewClient(String clientName) throws NoSuchAlgorithmException {
+    private ClientProperties initializeMyPropertiesNewClient() throws NoSuchAlgorithmException {
         //Symmetric key
         SecretKey mySecretKey = generateKeyAES(256);
 
@@ -138,8 +144,7 @@ public class ClientGUI {
         int randomIndex = r.nextInt(20);
         byte[] myIdx = BigInteger.valueOf(randomIndex).toByteArray();
 
-        ClientProperties myClientProperties = new ClientProperties(tagBytes, myIdx, mySecretKey);
-        myProperties.put(clientName, myClientProperties);
+        return new ClientProperties(tagBytes, myIdx, mySecretKey);
     }
 
     public static void main(String[] args) throws Exception {
@@ -213,4 +218,153 @@ public class ClientGUI {
         hmacSha256 = mac.doFinal(key.getEncoded());
         return new SecretKeySpec(hmacSha256, 0, hmacSha256.length, "AES");
     }
+
+    // Aanmaken Frame (vanblijven!!)
+    private void initComponents() {
+        // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
+        buttonPanel = new JPanel();
+        scrollPane = new JScrollPane();
+        messageArea = new JTextArea();
+        textField = new JTextField();
+        addNewClientButton = new JButton();
+
+        // Code for popup screen: new receiver
+        JPanel topRow = new JPanel();
+        topRow.add(new JLabel("ID: "));
+        topRow.add(idField);
+        topRow.add(new JLabel("Tag: "));
+        topRow.add(tagField);
+        topRow.add(new JLabel("Key: "));
+        topRow.add(keyField);
+        topRow.add(new JLabel("Name: "));
+        topRow.add(nameField);
+        
+        myPanel.add(topRow);
+
+        //======== this ========
+        frame.setTitle("Chatter");
+        var contentPane = frame.getContentPane();
+        contentPane.setLayout(new MigLayout(
+                "hidemode 3",
+                // columns
+                "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]" +
+                        "[fill]",
+                // rows
+                "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]" +
+                        "[]"));
+
+        //======== panel1 ========
+        {
+            buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 15));
+        }
+        contentPane.add(buttonPanel, "cell 0 0 55 4,grow");
+
+        //======== scrollPane1 ========
+        {
+            scrollPane.setViewportView(messageArea);
+        }
+        contentPane.add(scrollPane, "cell 0 4 55 36,grow");
+        contentPane.add(textField, "cell 0 40 51 1,growx");
+
+        //---- button1 ----
+        addNewClientButton.setText("Add new client");
+        contentPane.add(addNewClientButton, "cell 51 40 4 1");
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        // JFormDesigner - End of component initialization  //GEN-END:initComponents
+    }
 }
+
