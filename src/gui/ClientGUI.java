@@ -36,6 +36,7 @@ public class ClientGUI {
     JTextField idField = new JTextField(5);
     JTextField tagField = new JTextField(5);
     JTextField keyField = new JTextField(5);
+    JTextField nameField = new JTextField(5);
 
     //Encryption
     private final String CIPHER_INSTANCE = "AES/ECB/PKCS5Padding";
@@ -65,7 +66,7 @@ public class ClientGUI {
         frame.getContentPane().add(conncetions, BorderLayout.NORTH);
         frame.getContentPane().add(buttonPanel, BorderLayout.CENTER);
         frame.getContentPane().add(southPanel, BorderLayout.SOUTH);
-        frame.setSize(750, 390);
+        frame.setSize(625,390);
         frame.setLocationRelativeTo(null);
 
         // Code for popup screen: new receiver
@@ -76,6 +77,8 @@ public class ClientGUI {
         myPanel.add(tagField);
         myPanel.add(new JLabel("Key: "));
         myPanel.add(keyField);
+        myPanel.add(new JLabel("Name: "));
+        myPanel.add(nameField);
 
         // On enter
         textField.addActionListener(e -> {
@@ -97,13 +100,14 @@ public class ClientGUI {
                 byte[] receiverIdx = convertStringToByteArr(idField.getText());
                 byte[] receiverTag = convertStringToByteArr(tagField.getText());
                 SecretKey receiverSecretKey = new SecretKeySpec(convertStringToByteArr(keyField.getText()), 0, convertStringToByteArr(keyField.getText()).length, "AES");
+                String receiverName = nameField.getText();
                 ClientProperties clientProperties = new ClientProperties(receiverTag, receiverIdx, receiverSecretKey);
                 receiversProperties.put("test", clientProperties);
 
                 //this.clientThread.setReceiversProperties(receiversProperties);
 
                 //TODO: Add a new button for the new client
-                JButton newClient = new JButton(currentClientName);
+                JButton newClient = new JButton(receiverName);
                 //newClient.addActionListener();
                 buttonPanel.add(newClient);
                 frame.getContentPane().add(buttonPanel, BorderLayout.CENTER);
