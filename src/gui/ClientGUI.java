@@ -44,7 +44,6 @@ public class ClientGUI {
     private volatile HashMap<String, ClientProperties> receiversProperties = new HashMap<>();
     private String currentClientName;
 
-
     private ClientThread clientThread;
 
     public ClientGUI() {
@@ -58,14 +57,6 @@ public class ClientGUI {
         JPanel southPanel = new JPanel(new BorderLayout());
         southPanel.add(newClientButton, BorderLayout.EAST);
         southPanel.add(textField, BorderLayout.WEST);
-        JButton test1 = new JButton("Test 1");
-        JButton test2 = new JButton("Test 2");
-        JButton test3 = new JButton("Test 3");
-        JButton test4 = new JButton("Test 4");
-        buttonPanel.add(test1);
-        buttonPanel.add(test2);
-        buttonPanel.add(test3);
-        buttonPanel.add(test4);
 
         textField.setEditable(false);
         messageArea.setEditable(false);
@@ -74,7 +65,7 @@ public class ClientGUI {
         frame.getContentPane().add(conncetions, BorderLayout.NORTH);
         frame.getContentPane().add(buttonPanel, BorderLayout.CENTER);
         frame.getContentPane().add(southPanel, BorderLayout.SOUTH);
-        frame.setSize(750,390);
+        frame.setSize(750, 390);
         frame.setLocationRelativeTo(null);
 
         // Code for popup screen: new receiver
@@ -110,9 +101,9 @@ public class ClientGUI {
                 receiversProperties.put(receiverName, clientProperties);
 
                 this.clientThread.setReceiversProperties(myProperties);
-                createNewButton("name",receiverIdx,receiverTag,receiverSecretKey);
+
                 //TODO: Add a new button for the new client
-                JButton newClient = new JButton("Test 5");
+                JButton newClient = new JButton(currentClientName);
                 //newClient.addActionListener();
                 buttonPanel.add(newClient);
                 frame.getContentPane().add(buttonPanel, BorderLayout.CENTER);
@@ -171,7 +162,7 @@ public class ClientGUI {
         return keyGenerator.generateKey();
     }
 
-    private void run() throws IOException, NotBoundException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+    private void run() throws IOException, NotBoundException {
         try {
 
             Registry myRegistry = LocateRegistry.getRegistry("127.0.0.1", 1099);
@@ -196,7 +187,7 @@ public class ClientGUI {
         }
     }
 
-    public void send(String messageContent, String name) throws RemoteException, NoSuchAlgorithmException, InvalidKeyException {
+    public void send(String messageContent) throws RemoteException, NoSuchAlgorithmException, InvalidKeyException {
         ClientProperties myClientProperties = myProperties.get(name);
 
         //tag and idx for next message created inside message, client doesn't need to generate new ones
@@ -205,7 +196,6 @@ public class ClientGUI {
         myClientProperties.setTag(message.getTag());
         myClientProperties.setIdx(message.getIdx());
 
-        //TODO: write to dialog
         messageArea.append(String.format("%s: %s%n", this.name, messageContent));
         myClientProperties.setSecretKey(keyDeriviationFunction(myClientProperties.getSecretKey()));
     }
