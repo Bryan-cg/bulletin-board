@@ -151,7 +151,6 @@ public class ClientGUI {
         this.myIdx = BigInteger.valueOf(randomIndex).toByteArray();
         System.out.println(randomIndex);
 
-
         // Debugging: printing ID, Tag and Key
         System.out.println("This ID: " + Arrays.toString(myIdx));
         System.out.println("This Tag: " + Arrays.toString(myTag));
