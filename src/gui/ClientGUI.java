@@ -21,8 +21,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
 
-//TODO's (other)
-// Show tag, idx & secretkey in gui, so you can copy paste it in other client.
+//TODO: -Add map with key(string), value(list or stringbuffer) with previous messages (add message in the receive method?)
+//      -Remove bottomrow 1,2,3 from myPanel (the old id, tag and key) (adding the new ones is allready implemented)
+//      -Set textfields to "null" in toprow of mypanel
 
 public class ClientGUI {
 
@@ -102,22 +103,22 @@ public class ClientGUI {
                 byte[] receiverTag = convertStringToByteArr(tagField.getText());
                 SecretKey receiverSecretKey = new SecretKeySpec(convertStringToByteArr(keyField.getText()), 0, convertStringToByteArr(keyField.getText()).length, "AES");
                 String receiverName = nameField.getText();
-
                 ClientProperties clientProperties = new ClientProperties(receiverTag, receiverIdx, receiverSecretKey);
+
                 receiversProperties.put(receiverName, clientProperties);
-                // Adding the properties tot the right map
                 myProperties.put(name,newProperties);
 
-                //this.clientThread.setReceiversProperties(receiversProperties);
+                this.clientThread.setMyProperties(myProperties);
+                this.clientThread.setReceiversProperties(receiversProperties);
 
-                //TODO: Add functionallity to button for the new client
                 JButton newClient = new JButton(receiverName);
                 newClient.addActionListener(event -> {
                     // TextArea cleared
                     messageArea.setText(null);
-                    // Adding previous messages to the TextArea?
+                    // Adding previous messages to the TextArea
                     //messageArea.set(previoustexts.get(receiverName));
                     currentClientName=receiverName;
+                    this.clientThread.setCurrentClientName(currentClientName);
                 });
                 buttonPanel.add(newClient);
                 SwingUtilities.updateComponentTreeUI(frame);
@@ -156,7 +157,6 @@ public class ClientGUI {
         client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         client.frame.setVisible(true);
         client.run();
-
     }
 
     private String getName() {
