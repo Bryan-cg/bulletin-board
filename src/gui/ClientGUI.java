@@ -243,7 +243,7 @@ public class ClientGUI {
 
         //======== this ========
         frame.setTitle("Chatter");
-        var contentPane = frame.getContentPane();
+        Container contentPane = frame.getContentPane();
         contentPane.setLayout(new MigLayout(
                 "hidemode 3",
                 // columns
