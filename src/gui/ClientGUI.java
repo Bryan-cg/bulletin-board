@@ -83,13 +83,13 @@ public class ClientGUI {
 
             JPanel bottomRow1 = new JPanel();
             bottomRow1.add(new JLabel("ID: "));
-            bottomRow1.add(new JLabel(Arrays.toString(newProperties.getIdx())));
+            bottomRow1.add(new JTextField(Arrays.toString(newProperties.getIdx())));
             JPanel bottomRow2 = new JPanel();
             bottomRow2.add(new JLabel("Tag: "));
-            bottomRow2.add(new JLabel(Arrays.toString(newProperties.getTag())));
+            bottomRow2.add(new JTextField(Arrays.toString(newProperties.getTag())));
             JPanel bottomRow3 = new JPanel();
             bottomRow3.add(new JLabel("Key: "));
-            bottomRow3.add(new JLabel(Arrays.toString(newProperties.getSecretKey().getEncoded())));
+            bottomRow3.add(new JTextField(Arrays.toString(newProperties.getSecretKey().getEncoded())));
             myPanel.add(bottomRow1);
             myPanel.add(bottomRow2);
             myPanel.add(bottomRow3);
@@ -102,18 +102,22 @@ public class ClientGUI {
                 byte[] receiverTag = convertStringToByteArr(tagField.getText());
                 SecretKey receiverSecretKey = new SecretKeySpec(convertStringToByteArr(keyField.getText()), 0, convertStringToByteArr(keyField.getText()).length, "AES");
                 String receiverName = nameField.getText();
+
                 ClientProperties clientProperties = new ClientProperties(receiverTag, receiverIdx, receiverSecretKey);
                 receiversProperties.put(receiverName, clientProperties);
-
                 // Adding the properties tot the right map
-                myProperties.put(receiverName,clientProperties);
+                myProperties.put(name,newProperties);
 
                 //this.clientThread.setReceiversProperties(receiversProperties);
 
-                //TODO: Add a new button for the new client
+                //TODO: Add functionallity to button for the new client
                 JButton newClient = new JButton(receiverName);
                 newClient.addActionListener(event -> {
-                    //messageArea.clearofso
+                    // TextArea cleared
+                    messageArea.setText(null);
+                    // Adding previous messages to the TextArea?
+                    //messageArea.set(previoustexts.get(receiverName));
+                    currentClientName=receiverName;
                 });
                 buttonPanel.add(newClient);
                 SwingUtilities.updateComponentTreeUI(frame);
