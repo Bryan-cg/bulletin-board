@@ -111,6 +111,7 @@ public class ClientGUI {
                 this.clientThread.setMyProperties(myProperties);
                 this.clientThread.setReceiversProperties(receiversProperties);
 
+                // Add new button to buttonLabel
                 JButton newClient = new JButton(receiverName);
                 newClient.addActionListener(event -> {
                     // TextArea cleared
