@@ -16,6 +16,7 @@ public class ClientThread extends Thread {
     private final Chat bulletinBoard;
     private volatile HashMap<String, ClientProperties> myProperties = null;
     private volatile HashMap<String, ClientProperties> receiversProperties = null;
+    private volatile HashMap<String, ArrayList<String>> previousMessages = null;
     private volatile String currentClientName = null;
 
     private final JTextArea messageArea;
@@ -26,13 +27,15 @@ public class ClientThread extends Thread {
             HashMap<String, ClientProperties> myProperties,
             HashMap<String, ClientProperties> receiversProperties,
             JTextArea messageArea,
-            String CIPHER_INSTANCE) {
+            String CIPHER_INSTANCE,
+            HashMap<String, ArrayList<String>> previousMessages) {
 
         this.bulletinBoard = bulletinBoard;
         this.myProperties = myProperties;
         this.receiversProperties = receiversProperties;
         this.messageArea = messageArea;
         this.CIPHER_INSTANCE = CIPHER_INSTANCE;
+        this.previousMessages = previousMessages;
     }
 
     public void setMyProperties(HashMap<String, ClientProperties> myProperties) {
@@ -54,6 +57,7 @@ public class ClientThread extends Thread {
         if (totalMessage != null) {
             message = decryptTotalMessage(totalMessage);
             keyDeriviationFunction(receiverClientProperties.getSecretKey());
+            previousMessages.get(currentClientName).add(currentClientName + ": " + message);
             return message;
         }
         return null;
@@ -92,7 +96,7 @@ public class ClientThread extends Thread {
             genericByteArr[i] = decryptedMessage.get(i);
         }
         String messageResult = new String(genericByteArr);
-        messageArea.append(String.format("%s%n", messageResult));
+        messageArea.append(String.format("%s: %s%n", currentClientName ,messageResult));
         return messageResult;
     }
 
@@ -119,5 +123,13 @@ public class ClientThread extends Thread {
         mac.init(secretKeySpec);
         hmacSha256 = mac.doFinal(key.getEncoded());
         return new SecretKeySpec(hmacSha256, 0, hmacSha256.length, "AES");
+    }
+
+    public HashMap<String, ArrayList<String>> getPreviousMessages() {
+        return previousMessages;
+    }
+
+    public void setPreviousMessages(HashMap<String, ArrayList<String>> previousMessages) {
+        this.previousMessages = previousMessages;
     }
 }

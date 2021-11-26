@@ -51,6 +51,7 @@ public class ClientGUI {
 
     private volatile HashMap<String, ClientProperties> myProperties = new HashMap<>();
     private volatile HashMap<String, ClientProperties> receiversProperties = new HashMap<>();
+    private volatile HashMap<String, ArrayList<String>> previousMessages = new HashMap<>();
     private String currentClientName;
 
     private ClientThread clientThread;
@@ -64,6 +65,8 @@ public class ClientGUI {
         textField.addActionListener(e -> {
             try {
                 send(textField.getText());
+                previousMessages.get(currentClientName).add("You: " + textField.getText());
+                this.clientThread.setPreviousMessages(previousMessages);
             } catch (RemoteException | NoSuchAlgorithmException | InvalidKeyException ex) {
                 ex.printStackTrace();
             }
@@ -84,13 +87,20 @@ public class ClientGUI {
 
             JPanel bottomRow1 = new JPanel();
             bottomRow1.add(new JLabel("ID: "));
-            bottomRow1.add(new JTextField(Arrays.toString(newProperties.getIdx())));
+            JTextField textField1 = new JTextField(Arrays.toString(newProperties.getIdx()));
+            textField1.setEditable(false);
+            bottomRow1.add(textField1);
             JPanel bottomRow2 = new JPanel();
             bottomRow2.add(new JLabel("Tag: "));
-            bottomRow2.add(new JTextField(Arrays.toString(newProperties.getTag())));
+            JTextField textField2 = new JTextField(Arrays.toString(newProperties.getTag()));
+            textField2.setEditable(false);
+            bottomRow2.add(textField2);
             JPanel bottomRow3 = new JPanel();
             bottomRow3.add(new JLabel("Key: "));
-            bottomRow3.add(new JTextField(Arrays.toString(newProperties.getSecretKey().getEncoded())));
+            JTextField textField3 = new JTextField(Arrays.toString(newProperties.getSecretKey().getEncoded()));
+            textField3.setEditable(false);
+            bottomRow3.add(textField3);
+
             myPanel.add(bottomRow1);
             myPanel.add(bottomRow2);
             myPanel.add(bottomRow3);
@@ -105,25 +115,31 @@ public class ClientGUI {
                 String receiverName = nameField.getText();
                 ClientProperties clientProperties = new ClientProperties(receiverTag, receiverIdx, receiverSecretKey);
 
+                previousMessages.put(receiverName, new ArrayList<>());
                 receiversProperties.put(receiverName, clientProperties);
                 myProperties.put(name,newProperties);
 
                 this.clientThread.setMyProperties(myProperties);
                 this.clientThread.setReceiversProperties(receiversProperties);
+                this.clientThread.setPreviousMessages(previousMessages);
+                currentClientName=receiverName;
 
                 // Add new button to buttonLabel
                 JButton newClient = new JButton(receiverName);
                 newClient.addActionListener(event -> {
+                    // Changing the current client
+                    currentClientName=receiverName;
                     // TextArea cleared
                     messageArea.setText(null);
                     // Adding previous messages to the TextArea
-                    //messageArea.set(previoustexts.get(receiverName));
-                    currentClientName=receiverName;
+                    previousMessages = this.clientThread.getPreviousMessages();
+                    for (String message: previousMessages.get(currentClientName)) {
+                        messageArea.append(message + "\n");
+                    }
                     this.clientThread.setCurrentClientName(currentClientName);
                 });
                 buttonPanel.add(newClient);
                 SwingUtilities.updateComponentTreeUI(frame);
-                System.out.println(myProperties);
             }
         });
     }
@@ -192,7 +208,7 @@ public class ClientGUI {
 
             textField.setEditable(true);
 
-            clientThread = new ClientThread(bulletinBoard, myProperties, receiversProperties, messageArea, CIPHER_INSTANCE);
+            clientThread = new ClientThread(bulletinBoard, myProperties, receiversProperties, messageArea, CIPHER_INSTANCE, previousMessages);
             clientThread.start();
 
         } finally {
@@ -210,7 +226,7 @@ public class ClientGUI {
         myClientProperties.setTag(message.getTag());
         myClientProperties.setIdx(message.getIdx());
 
-        messageArea.append(String.format("%s: %s%n", this.name, messageContent));
+        messageArea.append(String.format("%s: %s%n", "You", messageContent));
         myClientProperties.setSecretKey(keyDeriviationFunction(myClientProperties.getSecretKey()));
     }
 
