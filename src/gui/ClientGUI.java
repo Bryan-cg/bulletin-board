@@ -21,9 +21,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
 
-//TODO: -Add map with key(string), value(list or stringbuffer) with previous messages (add message in the receive method?)
-//      -Remove bottomrow 1,2,3 from myPanel (the old id, tag and key) (adding the new ones is allready implemented)
-//      -Set textfields to "null" in toprow of mypanel
+//TODO: -Fix probleem met eerst op de knop klikken om berichten op te halen
+
 
 public class ClientGUI {
 
@@ -84,6 +83,24 @@ public class ClientGUI {
             } catch (NoSuchAlgorithmException ex) {
                 ex.printStackTrace();
             }
+
+            myPanel = new JPanel(new GridLayout(4, 1));
+
+            // Adding all components to the pop-up screen
+            idField.setText(null);
+            tagField.setText(null);
+            keyField.setText(null);
+            nameField.setText(null);
+            JPanel topRow = new JPanel();
+            topRow.add(new JLabel("ID: "));
+            topRow.add(idField);
+            topRow.add(new JLabel("Tag: "));
+            topRow.add(tagField);
+            topRow.add(new JLabel("Key: "));
+            topRow.add(keyField);
+            topRow.add(new JLabel("Name: "));
+            topRow.add(nameField);
+            myPanel.add(topRow);
 
             JPanel bottomRow1 = new JPanel();
             bottomRow1.add(new JLabel("ID: "));
@@ -248,19 +265,6 @@ public class ClientGUI {
         messageArea = new JTextArea();
         textField = new JTextField();
         addNewClientButton = new JButton();
-
-        // Code for popup screen: new receiver
-        JPanel topRow = new JPanel();
-        topRow.add(new JLabel("ID: "));
-        topRow.add(idField);
-        topRow.add(new JLabel("Tag: "));
-        topRow.add(tagField);
-        topRow.add(new JLabel("Key: "));
-        topRow.add(keyField);
-        topRow.add(new JLabel("Name: "));
-        topRow.add(nameField);
-        
-        myPanel.add(topRow);
 
         //======== this ========
         frame.setTitle("Chatter");
