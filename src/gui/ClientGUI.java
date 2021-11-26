@@ -140,6 +140,7 @@ public class ClientGUI {
                 this.clientThread.setReceiversProperties(receiversProperties);
                 this.clientThread.setPreviousMessages(previousMessages);
                 currentClientName=receiverName;
+                this.clientThread.setCurrentClientName(currentClientName);
 
                 // Add new button to buttonLabel
                 JButton newClient = new JButton(receiverName);
