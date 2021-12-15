@@ -79,7 +79,7 @@ public class ClientGUI {
             // Create new ID, Tag and Key for the new client
             ClientProperties newProperties = null;
             try {
-                newProperties= initializeMyPropertiesNewClient();
+                newProperties = initializeMyPropertiesNewClient();
             } catch (NoSuchAlgorithmException ex) {
                 ex.printStackTrace();
             }
@@ -134,24 +134,24 @@ public class ClientGUI {
 
                 previousMessages.put(receiverName, new ArrayList<>());
                 receiversProperties.put(receiverName, clientProperties);
-                myProperties.put(name,newProperties);
+                myProperties.put(name, newProperties);
 
                 this.clientThread.setMyProperties(myProperties);
                 this.clientThread.setReceiversProperties(receiversProperties);
                 this.clientThread.setPreviousMessages(previousMessages);
-                currentClientName=receiverName;
+                currentClientName = receiverName;
                 this.clientThread.setCurrentClientName(currentClientName);
 
                 // Add new button to buttonLabel
                 JButton newClient = new JButton(receiverName);
                 newClient.addActionListener(event -> {
                     // Changing the current client
-                    currentClientName=receiverName;
+                    currentClientName = receiverName;
                     // TextArea cleared
                     messageArea.setText(null);
                     // Adding previous messages to the TextArea
                     previousMessages = this.clientThread.getPreviousMessages();
-                    for (String message: previousMessages.get(currentClientName)) {
+                    for (String message : previousMessages.get(currentClientName)) {
                         messageArea.append(message + "\n");
                     }
                     this.clientThread.setCurrentClientName(currentClientName);
@@ -258,7 +258,7 @@ public class ClientGUI {
         return new SecretKeySpec(hmacSha256, 0, hmacSha256.length, "AES");
     }
 
-    // Aanmaken Frame (vanblijven!!)
+    // Creating frame with Java swing
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
         buttonPanel = new JPanel();
