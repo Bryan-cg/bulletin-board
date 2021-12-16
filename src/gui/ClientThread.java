@@ -8,6 +8,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
 import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +21,9 @@ public class ClientThread extends Thread {
 
     private final JTextArea messageArea;
     private final String CIPHER_INSTANCE;
+
+    //Hashing
+    private static final String SHA2_ALGORITHM = "SHA-256";
 
     public ClientThread(
             Chat bulletinBoard,
@@ -49,7 +53,8 @@ public class ClientThread extends Thread {
 
     public String receive() throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
         ClientProperties receiverClientProperties = receiversProperties.get(currentClientName);
-        byte[] totalMessage = bulletinBoard.get(receiverClientProperties.getIdx(), receiverClientProperties.getTag());
+        byte[] hashedTag = hashing(receiverClientProperties.getTag());
+        byte[] totalMessage = bulletinBoard.get(receiverClientProperties.getIdx(), hashedTag);
         String message;
         if (totalMessage != null) {
             message = decryptTotalMessage(totalMessage);
@@ -108,6 +113,12 @@ public class ClientThread extends Thread {
             }
 
         }
+
+    }
+
+    private byte[] hashing(byte[] tag) throws NoSuchAlgorithmException {
+        MessageDigest messageDigest = MessageDigest.getInstance(SHA2_ALGORITHM);
+        return messageDigest.digest(tag);
 
     }
 

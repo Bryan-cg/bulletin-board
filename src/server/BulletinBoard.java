@@ -32,25 +32,17 @@ public class BulletinBoard extends UnicastRemoteObject implements Chat {
     }
 
     @Override
-    public synchronized void write(byte[] idx, byte[] v, byte[] tag) throws NoSuchAlgorithmException {
-        byte[] hashedTag = hashing(tag);
+    public synchronized void write(byte[] idx, byte[] u, byte[] hashedTag) throws NoSuchAlgorithmException {
         int i = new BigInteger(idx).intValue();
-        cells.get(i).put(ByteBuffer.wrap(hashedTag), v);
+        cells.get(i).put(ByteBuffer.wrap(hashedTag), u);
     }
 
-    //TODO: remove message from bulletinboard
+    //TODO: remove message from bulletinboard, done
     @Override
-    public synchronized byte[] get(byte[] idx, byte[] tag) throws NoSuchAlgorithmException {
+    public synchronized byte[] get(byte[] idx, byte[] hashedTag) throws NoSuchAlgorithmException {
         int i = new BigInteger(idx).intValue();
-        byte[] hashedTag = hashing(tag);
-        return cells.get(i).get(ByteBuffer.wrap(hashedTag));
+        byte[] message = cells.get(i).get(ByteBuffer.wrap(hashedTag));
+        cells.get(i).remove(ByteBuffer.wrap(hashedTag));
+        return message;
     }
-
-    private byte[] hashing(byte[] tag) throws NoSuchAlgorithmException {
-
-        MessageDigest messageDigest = MessageDigest.getInstance(SHA2_ALGORITHM);
-        return messageDigest.digest(tag);
-
-    }
-
 }

@@ -17,6 +17,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
@@ -48,6 +49,9 @@ public class ClientGUI {
 
     //Encryption
     private final String CIPHER_INSTANCE = "AES/ECB/PKCS5Padding";
+
+    //Hashing
+    private static final String SHA2_ALGORITHM = "SHA-256";
 
     private volatile HashMap<String, ClientProperties> myProperties = new HashMap<>();
     private volatile HashMap<String, ClientProperties> receiversProperties = new HashMap<>();
@@ -206,7 +210,8 @@ public class ClientGUI {
 
         //tag and idx for next message created inside message, client doesn't need to generate new ones
         Message message = new Message(messageContent, myClientProperties.getSecretKey(), CIPHER_INSTANCE);
-        bulletinBoard.write(myClientProperties.getIdx(), message.getEncryptedMessage(), myClientProperties.getTag());
+        byte[] hashedTag = hashing(myClientProperties.getTag());
+        bulletinBoard.write(myClientProperties.getIdx(), message.getEncryptedMessage(), hashedTag);
         myClientProperties.setTag(message.getTag());
         myClientProperties.setIdx(message.getIdx());
 
@@ -222,6 +227,12 @@ public class ClientGUI {
         mac.init(secretKeySpec);
         hmacSha256 = mac.doFinal(key.getEncoded());
         return new SecretKeySpec(hmacSha256, 0, hmacSha256.length, "AES");
+    }
+
+    private byte[] hashing(byte[] tag) throws NoSuchAlgorithmException {
+        MessageDigest messageDigest = MessageDigest.getInstance(SHA2_ALGORITHM);
+        return messageDigest.digest(tag);
+
     }
 
     // Aanmaken Frame (vanblijven!!)
