@@ -37,7 +37,6 @@ public class BulletinBoard extends UnicastRemoteObject implements Chat {
         cells.get(i).put(ByteBuffer.wrap(hashedTag), u);
     }
 
-    //TODO: remove message from bulletinboard, done
     @Override
     public synchronized byte[] get(byte[] idx, byte[] hashedTag) throws NoSuchAlgorithmException {
         int i = new BigInteger(idx).intValue();
