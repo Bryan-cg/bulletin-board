@@ -40,6 +40,9 @@ public class BulletinBoard extends UnicastRemoteObject implements Chat {
     @Override
     public synchronized byte[] get(byte[] idx, byte[] hashedTag) throws NoSuchAlgorithmException {
         int i = new BigInteger(idx).intValue();
-        return cells.get(i).get(ByteBuffer.wrap(hashedTag));
+        if(i < BB_SIZE) {
+            return cells.get(i).get(ByteBuffer.wrap(hashedTag));
+        }
+        return null;
     }
 }
