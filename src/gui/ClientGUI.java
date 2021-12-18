@@ -22,8 +22,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
 
-//TODO: -Fix probleem met eerst op de knop klikken om berichten op te halen
-
 
 public class ClientGUI {
 

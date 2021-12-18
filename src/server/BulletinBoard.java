@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 public class BulletinBoard extends UnicastRemoteObject implements Chat {
-    private static final String SHA2_ALGORITHM = "SHA-256";
     private final int BB_SIZE = 20;
     private ArrayList<HashMap<ByteBuffer, byte[]>> cells; //hashmap = row in bulletin-board, element in row: <t, v> (t = hashing from tag)
 
