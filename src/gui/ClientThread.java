@@ -68,7 +68,6 @@ public class ClientThread extends Thread {
         return null;
     }
 
-    //TODO update receiverIdx and receiverTag from message content and return the actual message
     private String decryptTotalMessage(byte[] totalMessage) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         ClientProperties clientProperties = receiversProperties.get(currentClientName);
         final Cipher cipher;

@@ -136,7 +136,7 @@ public class ClientGUI {
 
                 previousMessages.put(receiverName, new ArrayList<>());
                 receiversProperties.put(receiverName, clientProperties);
-                myProperties.put(name, newProperties);
+                myProperties.put(receiverName, newProperties);
 
                 this.clientThread.setMyProperties(myProperties);
                 this.clientThread.setReceiversProperties(receiversProperties);
@@ -238,7 +238,7 @@ public class ClientGUI {
     }
 
     public void send(String messageContent) throws RemoteException, NoSuchAlgorithmException, InvalidKeyException {
-        ClientProperties myClientProperties = myProperties.get(name);
+        ClientProperties myClientProperties = myProperties.get(currentClientName);
 
         //tag and idx for next message created inside message, client doesn't need to generate new ones
         Message message = new Message(messageContent, myClientProperties.getSecretKey(), CIPHER_INSTANCE);
@@ -267,7 +267,7 @@ public class ClientGUI {
 
     }
 
-    // Aanmaken Frame (vanblijven!!)
+    // Aanmaken Frame
     // Creating frame with Java swing
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
