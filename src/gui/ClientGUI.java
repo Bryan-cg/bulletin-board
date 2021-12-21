@@ -279,6 +279,7 @@ public class ClientGUI {
 
         //======== this ========
         frame.setTitle("Chatter");
+        messageArea.setEditable(false);
         Container contentPane = frame.getContentPane();
         contentPane.setLayout(new MigLayout(
                 "hidemode 3",
